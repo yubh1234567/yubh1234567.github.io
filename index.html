@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="차량 보안을 중심으로 웹과 시스템 보안 공부를 기록하는 유병현의 기술 블로그"
+    />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>유병현 보안 일지</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 바로가기</a>
+
+    <div class="noise" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="유병현 보안 일지 홈">
+        <span class="brand-mark" aria-hidden="true">BH</span>
+        <span class="brand-copy">유병현<span> 보안 일지</span></span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="주요 메뉴">
+        <a href="#home">HOME</a>
+        <a href="#about">ABOUT</a>
+        <a href="#archive">ARCHIVE</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-button search-trigger" type="button" aria-label="글 검색 열기">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m21 21-4.35-4.35m2.35-5.4a7.75 7.75 0 1 1-15.5 0 7.75 7.75 0 0 1 15.5 0Z" />
+          </svg>
+          <span class="key-hint">⌘ K</span>
+        </button>
+        <button class="icon-button theme-toggle" type="button" aria-label="밝은 테마로 전환">
+          <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" />
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.2 15.2A8.5 8.5 0 0 1 8.8 3.8a8.5 8.5 0 1 0 11.4 11.4Z" />
+          </svg>
+        </button>
+        <button class="menu-toggle" type="button" aria-label="모바일 메뉴 열기" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="mobile-nav" aria-label="모바일 메뉴" aria-hidden="true">
+      <a href="#home">01. HOME</a>
+      <a href="#about">02. ABOUT</a>
+      <a href="#archive">03. ARCHIVE</a>
+    </nav>
+
+    <main id="main">
+      <section class="hero section-shell" id="home" aria-labelledby="hero-title">
+        <div class="hero-copy reveal">
+          <h1 id="hero-title">
+            유병현<br />
+            <span class="accent">보안 일지</span>
+          </h1>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#archive">
+              기록 둘러보기
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14 0m-5-5 5 5-5 5" /></svg>
+            </a>
+            <a class="text-link" href="#about">소개 읽기 <span>↘</span></a>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal" aria-label="현재 공부 중인 내용">
+          <div class="study-card">
+            <div class="study-card-label">
+              <span>이번 주 공부</span>
+              <span>01</span>
+            </div>
+            <div class="study-card-body">
+              <p>GITHUB PAGES</p>
+              <h2>개인 기술 블로그<br />직접 만들어 보기</h2>
+              <span>HTML · CSS · JavaScript</span>
+            </div>
+            <div class="study-card-footer">
+              <span>첫 번째 기록</span>
+              <a href="posts/github-pages-start.html">글 읽기 →</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="about section-shell" id="about" aria-labelledby="about-title">
+        <div class="about-intro reveal">
+          <p class="eyebrow">이 블로그에 대하여</p>
+          <h2 id="about-title">차량 보안을 공부하는<br />유병현입니다.</h2>
+        </div>
+        <div class="about-body reveal">
+          <p>
+            관심 분야는 차량 보안입니다. 차량 통신과 임베디드 환경에서 보안 문제가 어떻게
+            생기는지 공부하고 있으며, 이해에 필요한 웹·시스템 보안도 함께 살펴보고 있습니다.
+            이곳에는 공부하면서 직접 확인한 내용과 나중에 다시 볼 자료를 정리합니다.
+          </p>
+          <div class="principles">
+            <div><span>01</span><strong>직접 해본 것</strong><small>실습 환경과 결과를 함께 남깁니다.</small></div>
+            <div><span>02</span><strong>다시 찾을 수 있게</strong><small>참고한 자료와 핵심 링크를 모읍니다.</small></div>
+            <div><span>03</span><strong>막힌 곳부터</strong><small>실패한 시도와 해결 과정을 같이 적습니다.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="archive section-shell" id="archive" aria-labelledby="archive-title">
+        <div class="archive-heading reveal">
+          <div>
+            <p class="eyebrow">카테고리</p>
+            <h2 id="archive-title">분야별 기록</h2>
+          </div>
+          <p>관심 있는 분야를 선택하면 관련 기록만 모아볼 수 있습니다.</p>
+        </div>
+
+        <div class="category-grid reveal" id="categoryGrid" aria-label="블로그 카테고리"></div>
+
+        <div class="posts-toolbar reveal">
+          <div>
+            <span class="toolbar-label">최근에 작성한 글</span>
+            <h3>최근 기록</h3>
+          </div>
+          <button class="filter-reset" id="filterReset" type="button" hidden>
+            전체 보기 <span>×</span>
+          </button>
+        </div>
+
+        <div class="post-list" id="postList" aria-live="polite"></div>
+        <p class="empty-state" id="emptyState" hidden>검색 조건과 일치하는 기록이 없습니다.</p>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <a class="brand footer-brand" href="#home"><span class="brand-mark">BH</span> 유병현 보안 일지</a>
+      <p>KNIGHTS FRONTIER 3기 · <span id="currentYear"></span></p>
+      <a href="#home" class="back-to-top" aria-label="맨 위로 이동">↑ TOP</a>
+    </footer>
+
+    <dialog class="search-dialog" id="searchDialog" aria-labelledby="search-title">
+      <form method="dialog" class="search-panel">
+        <div class="search-header">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.4a7.75 7.75 0 1 1-15.5 0 7.75 7.75 0 0 1 15.5 0Z" /></svg>
+          <label class="sr-only" for="searchInput" id="search-title">기록 검색</label>
+          <input id="searchInput" type="search" placeholder="기록과 태그를 검색하세요…" autocomplete="off" />
+          <button class="dialog-close" type="submit" aria-label="검색 닫기">ESC</button>
+        </div>
+        <div class="search-results" id="searchResults">
+          <p>검색어를 입력하면 관련 기록을 찾아드립니다.</p>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

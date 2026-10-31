@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GitHub Pages의 개념부터 개인 블로그 배포 방법까지 정리한 구축 기록" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <title>GitHub Pages로 개인 기술 블로그 시작하기 — 유병현 보안 일지</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문으로 바로가기</a>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <a class="brand" href="../index.html" aria-label="유병현 보안 일지 홈">
+        <span class="brand-mark" aria-hidden="true">BH</span>
+        <span class="brand-copy">유병현<span> 보안 일지</span></span>
+      </a>
+      <a class="post-back" href="../index.html#archive">← ARCHIVE</a>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div>
+          <span class="article-category">개발 · 첫 번째 기록</span>
+          <h1>GitHub Pages로<br />개인 기술 블로그 시작하기</h1>
+          <p class="article-lede">
+            별도의 서버 비용 없이 저장소의 HTML, CSS, JavaScript를 웹사이트로 공개하는 과정을 기록한다.
+            첫 배포보다 중요한 것은 다시 업데이트할 수 있는 구조를 만드는 것이다.
+          </p>
+        </div>
+        <div class="article-meta" aria-label="글 정보">
+          <div><span>작성일</span><time datetime="2026-10-29">2026.10.29</time></div>
+          <div><span>읽는 시간</span><strong>5분</strong></div>
+          <div><span>분류</span><strong>개발</strong></div>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="목차">
+          <span>목차</span>
+          <ol>
+            <li><a href="#concept">01. 개념</a></li>
+            <li><a href="#structure">02. 구조 선택</a></li>
+            <li><a href="#build">03. 블로그 구성</a></li>
+            <li><a href="#publish">04. 배포 순서</a></li>
+            <li><a href="#review">05. 회고</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <h2 id="concept">GitHub Pages란?</h2>
+          <p>
+            GitHub Pages는 GitHub 저장소에 있는 정적 파일을 웹사이트로 공개하는 호스팅 서비스다.
+            HTML은 페이지의 구조, CSS는 디자인, JavaScript는 검색이나 필터 같은 상호작용을 담당한다.
+            서버에서 실행되는 PHP나 Python 없이도 개인 블로그와 포트폴리오를 운영할 수 있다.
+          </p>
+          <div class="note-box">
+            <strong>한 줄 정리</strong>
+            <p>로컬 파일을 수정 → GitHub 저장소에 반영 → Pages가 사이트로 배포하는 흐름이다.</p>
+          </div>
+
+          <h2 id="structure">사용자 사이트와 프로젝트 사이트</h2>
+          <p>GitHub Pages 주소는 저장소를 구성하는 방식에 따라 두 가지로 나뉜다.</p>
+
+          <h3>사용자 사이트</h3>
+          <p>
+            저장소 이름을 정확히 <strong>본인아이디.github.io</strong>로 만든다.
+            완성된 주소는 <strong>https://본인아이디.github.io</strong>가 된다.
+            계정당 하나의 대표 사이트를 만들 수 있어 개인 블로그에 잘 맞는다.
+          </p>
+
+          <h3>프로젝트 사이트</h3>
+          <p>
+            일반 저장소에서 Pages를 활성화하는 방식이다. 주소는
+            <strong>https://본인아이디.github.io/저장소이름/</strong> 형태가 된다.
+            프로젝트 문서나 데모에 적합하다.
+          </p>
+
+          <h2 id="build">이번 블로그의 구성</h2>
+          <p>
+            이번 미션에서는 프레임워크나 테마를 그대로 사용하지 않고 HTML, CSS, JavaScript로 직접 구성했다.
+            덕분에 빌드 과정 없이 파일을 올리는 것만으로 배포할 수 있고, 각 요소를 원하는 방식으로 수정할 수 있다.
+          </p>
+          <div class="code-block" aria-label="프로젝트 파일 구조">
+            <div class="code-title"><span>PROJECT TREE</span><span class="code-dots"><i></i><i></i><i></i></span></div>
+            <pre><code>.
+├── index.html          # 메인 페이지
+├── styles.css          # 공통 디자인
+├── script.js           # 검색·카테고리 필터
+├── post.css            # 글 페이지 디자인
+├── post.js             # 읽기 진행률
+├── posts/              # 작성한 기술 글
+├── assets/             # 아이콘과 이미지
+└── .nojekyll           # Jekyll 처리 비활성화</code></pre>
+          </div>
+          <p>미션 요구사항에 맞춰 다음 여섯 카테고리를 메뉴에 구성했다.</p>
+          <ul class="article-checklist">
+            <li>개발</li>
+            <li>CTF / Wargame</li>
+            <li>Bug Bounty</li>
+            <li>블로그 / 기술문서</li>
+            <li>논문 / 컨퍼런스</li>
+            <li>공모전 / 자격증</li>
+          </ul>
+
+          <h2 id="publish">배포 순서</h2>
+          <ol>
+            <li>본인 GitHub 계정에서 <strong>본인아이디.github.io</strong>라는 Public 저장소를 만든다.</li>
+            <li>완성한 블로그 파일을 저장소의 <strong>main</strong> 브랜치에 올린다.</li>
+            <li>저장소의 <strong>Settings → Pages</strong>로 이동한다.</li>
+            <li>Source는 <strong>Deploy from a branch</strong>를 선택한다.</li>
+            <li>브랜치는 <strong>main</strong>, 폴더는 <strong>/(root)</strong>를 선택한 뒤 저장한다.</li>
+            <li>배포가 끝나면 Pages 화면의 <strong>Visit site</strong>로 결과를 확인한다.</li>
+          </ol>
+          <div class="note-box">
+            <strong>공개 전 확인</strong>
+            <p>공개 저장소와 Pages 사이트에는 비밀번호, API 키, 개인정보 같은 민감한 내용을 절대 넣지 않는다.</p>
+          </div>
+          <p>
+            자세한 기준은
+            <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages" target="_blank" rel="noreferrer">GitHub Pages 공식 소개</a>와
+            <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site" target="_blank" rel="noreferrer">배포 소스 설정 문서</a>에서 확인했다.
+          </p>
+
+          <h2 id="review">회고와 다음 단계</h2>
+          <p>
+            첫 블로그를 만들며 가장 크게 배운 점은 디자인보다 기록을 이어갈 수 있는 구조가 중요하다는 것이다.
+            카테고리를 먼저 만들고 글 데이터를 한곳에서 관리하도록 구성하니, 새 글을 추가할 때 사이트 전체를 고칠 필요가 줄었다.
+          </p>
+          <p>
+            다음 단계는 각 카테고리에 실제 학습 기록을 하나씩 채우는 것이다. 문제를 해결한 결과뿐 아니라
+            환경, 실패한 시도, 해결 근거를 함께 기록해 재현 가능한 아카이브로 발전시킬 예정이다.
+          </p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer section-shell">
+      <p>첫 번째 기록을 마칩니다.</p>
+      <a class="button button-outline" href="../index.html#archive">다른 기록 살펴보기 →</a>
+    </footer>
+  </body>
+</html>
