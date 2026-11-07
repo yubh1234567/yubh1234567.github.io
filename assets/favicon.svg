@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#0a0e13"/>
-  <text x="32" y="39" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#6ea8fe">BH</text>
+  <rect width="64" height="64" fill="#0c1830"/>
+  <path d="M15 17h34v30H15z" fill="none" stroke="#f7f9fc" stroke-width="3"/>
+  <path d="M22 25h20M22 32h12M22 39h17" stroke="#1557ff" stroke-width="4"/>
+  <circle cx="45" cy="39" r="3" fill="#00a7d6"/>
 </svg>

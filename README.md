@@ -1,6 +1,6 @@
-# FRONTIER.LOG
+# 유병현 보안 일지
 
-Knights Frontier 3기 첫 번째 미션을 위해 만든 GitHub Pages용 개인 기술 블로그입니다.
+Knights Frontier 3기 첫 번째 미션을 위해 만든 GitHub Pages용 개인 기술 블로그입니다. 차량 보안 연구자의 필드 노트를 콘셉트로 삼아 기록의 위계와 가독성을 중심으로 구성했습니다.
 별도 빌드 도구 없이 HTML, CSS, JavaScript만 사용하므로 저장소에 올린 뒤 바로 배포할 수 있습니다.
 
 ## 1. 내 정보로 바꾸기
@@ -10,7 +10,8 @@ Knights Frontier 3기 첫 번째 미션을 위해 만든 GitHub Pages용 개인 
 - `index.html`: 소개 문장, 자기소개, 연락 안내
 - `script.js`의 `PROFILE.githubUrl`: 본인 GitHub 주소
 - `script.js`의 `posts`: 글 제목, 요약, 태그, 링크
-- `assets/favicon.svg`: 필요하면 이니셜이나 색상 변경
+- `assets/favicon.svg`: 사이트 아이콘
+- `DESIGN.md`: 글꼴, 색상, 문구, 레이아웃 기준
 
 새 글을 별도 HTML 문서로 작성했다면 `posts` 항목의 `url`을 해당 파일 경로로 바꾸고
 `draft: false`로 설정하면 됩니다.
