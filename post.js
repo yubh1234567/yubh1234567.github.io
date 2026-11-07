@@ -1,7 +1,7 @@
 const progress = document.querySelector("#readingProgress");
-const savedTheme = localStorage.getItem("frontier-theme") || "light";
+const savedTheme = localStorage.getItem("bpr0-theme") || "light";
 document.documentElement.dataset.theme = savedTheme;
-document.querySelector('meta[name="theme-color"]').content = savedTheme === "dark" ? "#07101f" : "#f7f9fc";
+document.querySelector('meta[name="theme-color"]').content = savedTheme === "dark" ? "#01040a" : "#050a12";
 
 function updateReadingProgress() {
   const scrollable = document.documentElement.scrollHeight - window.innerHeight;

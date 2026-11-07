@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="GitHub Pages의 개념부터 개인 블로그 배포 방법까지 정리한 구축 기록" />
-    <meta name="theme-color" content="#07101f" />
-    <title>GitHub Pages 개인 기술 블로그 구축 — YBH Security Lab</title>
+    <meta name="theme-color" content="#050a12" />
+    <title>GitHub Pages 개인 기술 블로그 구축 — byeongPR0</title>
     <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Noto+Sans+KR:wght@400;500;600;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../styles.css" />
@@ -23,33 +23,37 @@
 
     <header class="post-header">
       <div class="post-header-inner">
-        <a class="brand" href="../index.html" aria-label="YBH Security Lab 홈">
-          <span class="brand-code" aria-hidden="true">YBH//LAB</span>
-          <span class="brand-name">SECURITY + AI</span>
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
         </a>
-        <a class="post-back" href="../index.html#archive">아카이브로 ←</a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
       </div>
     </header>
 
     <main id="article">
       <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>GW</span><i></i><span>CAN_H</span><i></i><span>LOG_001</span>
+        </div>
         <div class="article-heading">
-          <span class="article-category">개발 · 기록 001</span>
+          <span class="article-category">SESSION_001 / DEVELOPMENT</span>
           <h1>GitHub Pages<br /><em>개인 기술 블로그 구축</em></h1>
           <p class="article-lede">
             별도 서버 없이 HTML, CSS, JavaScript로 만든 사이트를 공개한 과정과 이후의 수정을 고려한 파일 구조를 정리했습니다.
           </p>
         </div>
         <dl class="article-meta" aria-label="글 정보">
-          <div><dt>작성일</dt><dd><time datetime="2026-10-29">2026.10.29</time></dd></div>
-          <div><dt>읽는 시간</dt><dd>5분</dd></div>
-          <div><dt>분류</dt><dd>개발</dd></div>
+          <div><dt>DATE</dt><dd><time datetime="2026-10-29">2026.10.29</time></dd></div>
+          <div><dt>READ</dt><dd>5 MIN</dd></div>
+          <div><dt>NODE</dt><dd>개발</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
         </dl>
       </section>
 
       <div class="article-layout section-shell">
         <aside class="article-toc" aria-label="글의 구성">
-          <span>글의 구성</span>
+          <span>SESSION MAP</span>
           <ol>
             <li><a href="#concept"><span>01</span>Pages의 개념</a></li>
             <li><a href="#structure"><span>02</span>사이트 구조</a></li>
@@ -65,7 +69,7 @@
             GitHub Pages는 저장소에 있는 정적 파일을 웹사이트로 공개하는 호스팅 서비스다. HTML은 페이지의 구조, CSS는 디자인, JavaScript는 검색이나 필터 같은 상호작용을 맡는다. 서버에서 실행되는 PHP나 Python이 없어도 개인 블로그와 포트폴리오를 운영할 수 있다.
           </p>
           <div class="note-box">
-            <strong>핵심 흐름</strong>
+            <strong>TRACE SUMMARY</strong>
             <p>로컬 파일 수정 → GitHub 저장소 반영 → Pages 사이트 배포.</p>
           </div>
 
@@ -87,7 +91,7 @@
             프레임워크나 배포용 테마 없이 HTML, CSS, JavaScript로 구성했다. 빌드 과정 없이 파일을 올리면 바로 배포할 수 있고, 화면의 각 요소도 직접 조정할 수 있는 구조다.
           </p>
           <div class="code-block" aria-label="프로젝트 파일 구조">
-            <div class="code-title"><span>PROJECT TREE</span><span class="code-dots"><i></i><i></i><i></i></span></div>
+            <div class="code-title"><span>PROJECT TREE</span><span>LOCAL</span></div>
             <pre><code>.
 ├── index.html          # 메인 페이지
 ├── styles.css          # 공통 디자인
@@ -118,7 +122,7 @@
             <li>배포 완료 후 Pages 화면의 <strong>Visit site</strong>에서 결과 확인.</li>
           </ol>
           <div class="note-box">
-            <strong>공개 전 점검</strong>
+            <strong>PUBLIC CHECK</strong>
             <p>Public 저장소와 Pages 사이트에 비밀번호, API 키, 개인정보를 넣지 않는 것이 기본 원칙.</p>
           </div>
           <p>
@@ -140,8 +144,8 @@
 
     <footer class="article-footer">
       <div class="article-footer-inner section-shell">
-        <p>첫 번째 구축 기록</p>
-        <a class="plain-link" href="../index.html#archive">다른 기록 목록 →</a>
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_001 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
       </div>
     </footer>
   </body>

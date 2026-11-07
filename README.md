@@ -1,6 +1,7 @@
-# YBH SECURITY LAB
+# byeongPR0
 
-Knights Frontier 3기 첫 번째 미션을 위해 만든 GitHub Pages용 개인 기술 블로그입니다. 차량 보안과 AI 기술 활용을 기록하는 연구 로그를 콘셉트로 삼아 정보의 위계와 가독성을 중심으로 구성했습니다.
+Knights Frontier 3기 첫 번째 미션을 위해 만든 GitHub Pages용 개인 기술 블로그입니다. 보안 닉네임 `byeongPR0`를 중심으로 차량 보안과 AI 기술 활용 과정을 기록합니다.
+첫 화면의 차량 상면도와 CAN 패킷 흐름은 Canvas로 직접 그리며, 여섯 기록 분야는 차량 네트워크 노드처럼 구성했습니다.
 별도 빌드 도구 없이 HTML, CSS, JavaScript만 사용하므로 저장소에 올린 뒤 바로 배포할 수 있습니다.
 
 ## 1. 내 정보로 바꾸기
@@ -60,12 +61,13 @@ python -m http.server 8000
 ├── index.html          # 페이지 구조와 소개 문구
 ├── styles.css          # 반응형 디자인과 테마
 ├── script.js           # 카테고리, 글 데이터, 검색/필터 기능
+├── vehicle-stage.js    # 차량 네트워크 Canvas 애니메이션
 ├── post.css            # 기술 글 페이지 공통 디자인
 ├── post.js             # 기술 글 읽기 진행률
 ├── posts/
 │   └── github-pages-start.html # 첫 번째 구축 기록
 ├── assets/
-│   └── favicon.svg     # 사이트 아이콘
+│   └── favicon.svg     # byeongPR0 사이트 아이콘
 ├── .nojekyll           # GitHub Pages의 Jekyll 처리 비활성화
 └── README.md           # 개인화 및 배포 안내
 ```

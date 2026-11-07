@@ -1,14 +1,15 @@
 const PROFILE = {
+  alias: "byeongPR0",
   githubUrl: "https://github.com/yubh1234567",
 };
 
 const categories = [
-  { id: "development", number: "01", title: "개발", subtitle: "차량 보안과 AI 활용 기록" },
-  { id: "ctf", number: "02", title: "CTF / Wargame", subtitle: "문제 풀이와 회고" },
-  { id: "bug-bounty", number: "03", title: "Bug Bounty", subtitle: "취약점 분석과 방법론" },
-  { id: "docs", number: "04", title: "블로그 / 기술문서", subtitle: "기술 메모와 작성 기준" },
-  { id: "research", number: "05", title: "논문 / 컨퍼런스", subtitle: "논문과 발표 기록" },
-  { id: "certification", number: "06", title: "공모전 / 자격증", subtitle: "준비 과정 기록" },
+  { id: "development", number: "01", title: "개발", subtitle: "차량 보안 · AI 활용" },
+  { id: "ctf", number: "02", title: "CTF / Wargame", subtitle: "문제 풀이 · 회고" },
+  { id: "bug-bounty", number: "03", title: "Bug Bounty", subtitle: "취약점 분석 · 방법론" },
+  { id: "docs", number: "04", title: "블로그 / 기술문서", subtitle: "기술 메모 · 작성 기준" },
+  { id: "research", number: "05", title: "논문 / 컨퍼런스", subtitle: "논문 · 발표 기록" },
+  { id: "certification", number: "06", title: "공모전 / 자격증", subtitle: "준비 과정 · 회고" },
 ];
 
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
@@ -17,7 +18,7 @@ const posts = [
     category: "development",
     date: "2026.10.29",
     title: "GitHub Pages 개인 기술 블로그 구축",
-    summary: "저장소 생성부터 정적 사이트 배포까지 정리한 첫 구축 기록.",
+    summary: "저장소 구성부터 정적 사이트 배포까지 정리한 첫 구축 기록.",
     tags: ["GitHub Pages", "HTML", "CSS"],
     url: "posts/github-pages-start.html",
     draft: false,
@@ -97,12 +98,14 @@ function renderCategories() {
       const count = publishedPosts.filter((post) => post.category === category.id).length;
       return `
         <button class="category-item" type="button" data-category="${category.id}" aria-pressed="false">
-          <span class="category-index">${category.number}</span>
+          <span class="category-topline">
+            <span class="category-index">NODE_${category.number}</span>
+            <span class="category-count" aria-label="공개 기록 ${count}개">${String(count).padStart(2, "0")}</span>
+          </span>
           <span class="category-copy">
             <span class="category-title">${category.title}</span>
             <span class="category-description">${category.subtitle}</span>
           </span>
-          <span class="category-count" aria-label="공개 기록 ${count}개">${String(count).padStart(2, "0")}</span>
         </button>
       `;
     })
@@ -149,7 +152,7 @@ function setCategory(categoryId) {
     button.setAttribute("aria-pressed", String(isActive));
   });
 
-  document.querySelector(".posts-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector(".archive-heading").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetCategory() {
@@ -197,18 +200,17 @@ function renderSearchResults(query) {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem("frontier-theme", theme);
+  localStorage.setItem("bpr0-theme", theme);
   document.querySelector(".theme-toggle").setAttribute(
     "aria-label",
-    theme === "dark" ? "밝은 테마로 전환" : "어두운 테마로 전환",
+    theme === "dark" ? "기본 테마로 전환" : "고대비 테마로 전환",
   );
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#030916" : "#07101f";
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#01040a" : "#050a12";
 }
 
 function setupTheme() {
-  const savedTheme = localStorage.getItem("frontier-theme") || "light";
+  const savedTheme = localStorage.getItem("bpr0-theme") || "light";
   applyTheme(savedTheme);
-
   document.querySelector(".theme-toggle").addEventListener("click", () => {
     const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
@@ -237,19 +239,26 @@ function setupMobileMenu() {
   menu.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
 }
 
+function updateScrollState() {
+  const scrollable = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+  const percent = `${(window.scrollY / scrollable) * 100}%`;
+  document.documentElement.style.setProperty("--page-progress", percent);
+  document.querySelector(".site-header").classList.toggle("scrolled", window.scrollY > 8);
+}
+
 renderCategories();
 renderPosts();
 setupTheme();
 setupMobileMenu();
+updateScrollState();
 
 document.querySelector("#githubLink").href = PROFILE.githubUrl;
 document.querySelector("#currentYear").textContent = new Date().getFullYear();
 document.querySelector(".search-trigger").addEventListener("click", openSearch);
 filterReset.addEventListener("click", resetCategory);
 searchInput.addEventListener("input", (event) => renderSearchResults(event.target.value));
-window.addEventListener("scroll", () => {
-  document.querySelector(".site-header").classList.toggle("scrolled", window.scrollY > 8);
-}, { passive: true });
+window.addEventListener("scroll", updateScrollState, { passive: true });
+window.addEventListener("resize", updateScrollState);
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && searchDialog.open) {
     event.preventDefault();
