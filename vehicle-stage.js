@@ -44,7 +44,7 @@
     return {
       mobile,
       centerX: mobile ? width * 0.53 : width * 0.735 + pointer.x * 12,
-      centerY: mobile ? height * 0.585 : height * 0.535 + pointer.y * 8,
+      centerY: mobile ? height * 0.675 : height * 0.535 + pointer.y * 8,
       scale: mobile
         ? Math.min(width / 485, 0.92)
         : Math.min(width / 1080, height / 720, 1.42),

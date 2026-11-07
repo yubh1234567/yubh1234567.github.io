@@ -101,79 +101,54 @@
         </div>
       </section>
 
-      <section class="profile section-block" id="profile" aria-labelledby="profile-title">
+      <section class="overview section-block" id="profile" aria-labelledby="profile-title">
         <div class="section-shell">
-          <div class="section-tag"><span>01</span>OPERATOR PROFILE</div>
-          <div class="profile-layout">
-            <div class="profile-heading">
+          <div class="section-tag"><span>01</span>OPERATOR / PROTOCOL</div>
+          <div class="overview-layout">
+            <div class="overview-identity">
               <p>YOO BYEONGHYEON</p>
-              <h2 id="profile-title">유병현<br /><em>byeongPR0</em></h2>
+              <h2 id="profile-title">유병현 <em>byeongPR0</em></h2>
+              <div class="overview-focus">
+                <span>차량 통신</span><i></i><span>임베디드 보안</span><i></i><span>AI 기술 활용</span>
+              </div>
             </div>
 
-            <div class="profile-copy">
-              <p class="profile-lead">보안 닉네임 byeongPR0.</p>
-              <p>차량 통신과 임베디드 보안, AI 기술 활용을 공부합니다.</p>
-            </div>
-
-            <dl class="profile-spec">
-              <div><dt>ALIAS</dt><dd>byeongPR0</dd></div>
-              <div><dt>FIELD</dt><dd>차량 보안</dd></div>
-              <div><dt>TOOL</dt><dd>AI 기술 활용</dd></div>
+            <dl class="overview-spec">
+              <div><dt>FIELD</dt><dd>Vehicle Security</dd></div>
               <div><dt>GROUP</dt><dd>Knights Frontier 3기</dd></div>
+              <div><dt>STATUS</dt><dd>Learning / Building</dd></div>
             </dl>
-          </div>
-        </div>
-      </section>
 
-      <section class="protocol section-block" id="protocol" aria-labelledby="protocol-title">
-        <div class="section-shell">
-          <div class="section-tag"><span>02</span>LOG PROTOCOL</div>
-          <div class="protocol-heading">
-            <h2 id="protocol-title">기록 방식</h2>
-            <p>환경 / 근거 / 해결 과정</p>
+            <ol class="protocol-compact" aria-label="기록 원칙">
+              <li><span>ENV_01</span><strong>실습 환경</strong></li>
+              <li><span>REF_02</span><strong>참고 출처</strong></li>
+              <li><span>FIX_03</span><strong>해결 과정</strong></li>
+            </ol>
           </div>
-
-          <ol class="protocol-list">
-            <li>
-              <span class="protocol-code">ENV_01</span>
-              <h3>실습 환경</h3>
-              <p>실행 환경과 확인 결과.</p>
-            </li>
-            <li>
-              <span class="protocol-code">REF_02</span>
-              <h3>판단 근거</h3>
-              <p>공식 문서와 참고 링크.</p>
-            </li>
-            <li>
-              <span class="protocol-code">FIX_03</span>
-              <h3>해결 과정</h3>
-              <p>실패한 시도와 해결 방법.</p>
-            </li>
-          </ol>
         </div>
       </section>
 
       <section class="network section-block" id="network" aria-labelledby="network-title">
         <div class="section-shell">
-          <div class="section-tag"><span>03</span>RECORD NETWORK</div>
+          <div class="section-tag"><span>02</span>RECORD INDEX</div>
           <div class="network-heading">
-            <h2 id="network-title">기록 분야</h2>
-            <p>노드 선택 → 공개 기록 필터</p>
+            <h2 id="network-title">기록 인덱스</h2>
+            <p>06 CHANNELS / PUBLIC LOGS</p>
           </div>
           <div class="network-bus" aria-hidden="true"><span>CAN_H</span><i></i><span>500 KBPS</span></div>
           <div class="category-grid" id="categoryGrid" aria-label="블로그 카테고리"></div>
-        </div>
-      </section>
 
-      <section class="archive section-block" id="archive" aria-labelledby="archive-title">
-        <div class="section-shell">
-          <div class="section-tag"><span>04</span>PUBLISHED LOGS</div>
-          <div class="archive-heading">
-            <h2 id="archive-title">공개 기록</h2>
-            <button class="filter-reset" id="filterReset" type="button" hidden>전체 기록으로 돌아가기</button>
+          <div class="archive-inline" id="archive">
+            <div class="archive-heading">
+              <div>
+                <span class="archive-label">LATEST / PUBLISHED</span>
+                <h3 id="archive-title">최근 기록</h3>
+              </div>
+              <button class="filter-reset" id="filterReset" type="button" hidden>전체 기록</button>
+            </div>
+            <div class="post-list" id="postList" aria-live="polite"></div>
+            <p class="empty-state" id="emptyState" hidden>아직 공개한 기록이 없습니다.</p>
           </div>
-          <div class="post-list" id="postList" aria-live="polite"></div>
-          <p class="empty-state" id="emptyState" hidden>아직 공개한 기록이 없습니다.</p>
         </div>
       </section>
     </main>
