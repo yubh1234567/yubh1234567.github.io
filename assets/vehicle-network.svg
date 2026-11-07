@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">차량 네트워크 청사진</title>
+  <desc id="desc">차량 윤곽과 CAN 버스, ECU 노드를 표현한 추상 기술 도면</desc>
+  <defs>
+    <pattern id="micro-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#6e91d9" stroke-opacity=".12" stroke-width="1"/>
+    </pattern>
+    <pattern id="major-grid" width="200" height="200" patternUnits="userSpaceOnUse">
+      <path d="M200 0H0V200" fill="none" stroke="#8aabef" stroke-opacity=".15" stroke-width="1.2"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#micro-grid)"/>
+  <rect width="1600" height="1000" fill="url(#major-grid)"/>
+
+  <g fill="none" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M40 152H560L628 220H842" stroke="#1f67ff" stroke-opacity=".42" stroke-width="2"/>
+    <path d="M0 806H430L500 736H760" stroke="#28d7ff" stroke-opacity=".28" stroke-width="2"/>
+    <path d="M150 58V430L205 485V920" stroke="#1f67ff" stroke-opacity=".24" stroke-width="2"/>
+    <path d="M540 0V188L596 244V610L548 658V1000" stroke="#28d7ff" stroke-opacity=".18" stroke-width="1.5"/>
+
+    <path d="M982 112C912 143 877 210 858 328L820 689C810 797 863 880 974 904H1192C1305 880 1358 797 1347 689L1309 328C1290 210 1255 143 1185 112Z" stroke="#88a8f0" stroke-opacity=".35" stroke-width="2"/>
+    <path d="M956 272C1012 225 1157 225 1212 272L1251 457H917Z" stroke="#28d7ff" stroke-opacity=".34" stroke-width="2"/>
+    <path d="M916 498H1253L1278 733C1283 786 1243 831 1188 840H980C925 831 885 786 890 733Z" stroke="#1f67ff" stroke-opacity=".38" stroke-width="2"/>
+    <path d="M1084 113V904M858 505H1308" stroke="#7397e5" stroke-opacity=".18" stroke-width="1.3" stroke-dasharray="8 12"/>
+    <path d="M934 618H1234M954 659H1214" stroke="#28d7ff" stroke-opacity=".3" stroke-width="2"/>
+
+    <path d="M710 292H948M710 694H919M1235 410H1500M1235 742H1445" stroke="#1f67ff" stroke-opacity=".52" stroke-width="2"/>
+    <path d="M710 312H948M710 714H919" stroke="#28d7ff" stroke-opacity=".3" stroke-width="1.5"/>
+  </g>
+
+  <g font-family="IBM Plex Mono, monospace" font-size="17" letter-spacing="2">
+    <g fill="#9bb7f2" fill-opacity=".7">
+      <text x="52" y="138">CAN NETWORK / 500 KBPS</text>
+      <text x="52" y="792">SECURITY RESEARCH NODE</text>
+      <text x="985" y="88">VEHICLE TOPOLOGY / REV.01</text>
+    </g>
+
+    <g fill="#07101f" stroke="#1f67ff" stroke-opacity=".7">
+      <rect x="646" y="264" width="146" height="78"/>
+      <rect x="646" y="666" width="146" height="78"/>
+      <rect x="1418" y="375" width="142" height="78"/>
+      <rect x="1372" y="706" width="188" height="78"/>
+    </g>
+
+    <g fill="#d9e7ff" fill-opacity=".82" font-size="15">
+      <text x="670" y="298">GATEWAY</text>
+      <text x="670" y="322">ECU_01</text>
+      <text x="670" y="700">ADAS</text>
+      <text x="670" y="724">ECU_02</text>
+      <text x="1442" y="409">TCU</text>
+      <text x="1442" y="433">NODE_03</text>
+      <text x="1396" y="740">AI ANALYSIS</text>
+      <text x="1396" y="764">LOCAL ONLY</text>
+    </g>
+  </g>
+
+  <g fill="#28d7ff">
+    <circle cx="948" cy="292" r="5"/>
+    <circle cx="919" cy="694" r="5"/>
+    <circle cx="1235" cy="410" r="5"/>
+    <circle cx="1235" cy="742" r="5"/>
+  </g>
+  <g fill="#1f67ff">
+    <circle cx="710" cy="292" r="6"/>
+    <circle cx="710" cy="694" r="6"/>
+    <circle cx="1500" cy="410" r="6"/>
+    <circle cx="1445" cy="742" r="6"/>
+  </g>
+</svg>

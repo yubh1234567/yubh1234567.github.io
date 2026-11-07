@@ -3,7 +3,7 @@ const PROFILE = {
 };
 
 const categories = [
-  { id: "development", number: "01", title: "개발", subtitle: "차량 보안과 개발 기록" },
+  { id: "development", number: "01", title: "개발", subtitle: "차량 보안과 AI 활용 기록" },
   { id: "ctf", number: "02", title: "CTF / Wargame", subtitle: "문제 풀이와 회고" },
   { id: "bug-bounty", number: "03", title: "Bug Bounty", subtitle: "취약점 분석과 방법론" },
   { id: "docs", number: "04", title: "블로그 / 기술문서", subtitle: "기술 메모와 작성 기준" },
@@ -202,7 +202,7 @@ function applyTheme(theme) {
     "aria-label",
     theme === "dark" ? "밝은 테마로 전환" : "어두운 테마로 전환",
   );
-  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#07101f" : "#f7f9fc";
+  document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#030916" : "#07101f";
 }
 
 function setupTheme() {

@@ -7,8 +7,11 @@
   z-index: 50;
   top: 0;
   height: var(--header-height);
-  border-bottom: 1px solid var(--line);
-  background: var(--paper);
+  border-bottom: 1px solid rgba(40, 215, 255, 0.34);
+  background: rgba(7, 16, 31, 0.94);
+  color: var(--inverse);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .post-header-inner {
@@ -22,8 +25,8 @@
 
 .post-back {
   padding-bottom: 3px;
-  border-bottom: 1px solid var(--ink);
-  color: var(--ink-soft);
+  border-bottom: 1px solid var(--inverse-soft);
+  color: var(--inverse-soft);
   font-size: 0.75rem;
 }
 
@@ -44,12 +47,46 @@
 }
 
 .article-hero {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 22px;
   padding-top: clamp(90px, 11vw, 150px);
   padding-bottom: clamp(70px, 9vw, 110px);
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid rgba(139, 173, 236, 0.4);
+  color: var(--inverse);
+}
+
+.article-hero::before {
+  position: absolute;
+  z-index: -2;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background-color: #07101f;
+  background-image:
+    linear-gradient(90deg, rgba(7, 16, 31, 0.99) 0%, rgba(7, 16, 31, 0.9) 48%, rgba(7, 16, 31, 0.48) 100%),
+    url("assets/vehicle-network.svg");
+  background-position: center 48%;
+  background-size: cover;
+  content: "";
+}
+
+.article-hero::after {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  width: min(42vw, 660px);
+  height: 100%;
+  border-left: 1px solid rgba(40, 215, 255, 0.32);
+  background: rgba(31, 103, 255, 0.09);
+  clip-path: polygon(22% 0, 100% 0, 82% 100%, 0 100%);
+  content: "";
 }
 
 .article-heading {
@@ -59,7 +96,7 @@
 .article-category {
   display: block;
   margin-bottom: 28px;
-  color: var(--teal);
+  color: var(--cyan);
   font-family: var(--mono);
   font-size: 0.68rem;
   font-weight: 500;
@@ -69,13 +106,14 @@
 .article-hero h1 {
   max-width: 920px;
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: clamp(3rem, 6.2vw, 5.2rem);
-  font-weight: 800;
-  letter-spacing: -0.055em;
-  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1;
   text-wrap: balance;
   word-break: keep-all;
+  text-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
 }
 
 .article-hero h1 em {
@@ -86,7 +124,7 @@
 .article-lede {
   max-width: 700px;
   margin: 36px 0 0;
-  color: var(--ink-soft);
+  color: #b9c9e2;
   font-family: var(--sans);
   font-size: clamp(0.98rem, 1.4vw, 1.1rem);
   line-height: 1.9;
@@ -98,7 +136,9 @@
   grid-column: 10 / -1;
   align-content: end;
   margin: 0;
-  border-top: 2px solid var(--ink);
+  border-top: 2px solid var(--cyan);
+  background: rgba(4, 12, 27, 0.55);
+  backdrop-filter: blur(8px);
 }
 
 .article-meta div {
@@ -107,7 +147,7 @@
   justify-content: space-between;
   gap: 14px;
   padding: 12px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(139, 173, 236, 0.32);
 }
 
 .article-meta dt,
@@ -118,7 +158,7 @@
 }
 
 .article-meta dt {
-  color: var(--ink-soft);
+  color: #8fa7cf;
 }
 
 .article-meta dd {
@@ -194,7 +234,7 @@
   padding-top: 22px;
   border-top: 2px solid var(--ink);
   color: var(--ink);
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: clamp(1.7rem, 3vw, 2.4rem);
   font-weight: 700;
   letter-spacing: -0.045em;
@@ -210,7 +250,7 @@
 .article-body h3 {
   margin: 52px 0 14px;
   color: var(--ink);
-  font-family: var(--serif);
+  font-family: var(--sans);
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -351,7 +391,7 @@
 .article-footer p {
   margin: 0;
   color: var(--inverse-soft);
-  font-family: var(--serif);
+  font-family: var(--sans);
 }
 
 .article-footer .plain-link {
