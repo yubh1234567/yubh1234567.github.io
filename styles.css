@@ -1649,42 +1649,6 @@ svg {
   text-align: right;
 }
 
-.protocol-compact {
-  display: grid;
-  grid-column: 1 / -1;
-  margin: 54px 0 0;
-  padding: 0;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line);
-  list-style: none;
-}
-
-.protocol-compact li {
-  display: grid;
-  min-height: 82px;
-  padding: 16px 20px;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 12px;
-  border-right: 1px solid var(--line);
-  background: rgba(4, 13, 26, 0.42);
-}
-
-.protocol-compact li:last-child {
-  border-right: 0;
-}
-
-.protocol-compact span {
-  color: var(--blue);
-  font-family: var(--mono);
-  font-size: 0.58rem;
-}
-
-.protocol-compact strong {
-  font-size: 0.96rem;
-}
-
 .network {
   background:
     radial-gradient(circle at 78% 18%, rgba(36, 98, 205, 0.09), transparent 26%),
@@ -1846,22 +1810,6 @@ svg {
 
   .overview-spec {
     margin-top: 36px;
-  }
-
-  .protocol-compact {
-    margin-top: 34px;
-  }
-
-  .protocol-compact li {
-    min-height: 72px;
-    padding: 12px;
-    grid-template-columns: 1fr;
-    align-content: center;
-    gap: 8px;
-  }
-
-  .protocol-compact strong {
-    font-size: 0.82rem;
   }
 
   .network-heading {
