@@ -15,6 +15,15 @@ const categories = [
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
   {
+    category: "docs",
+    date: "2026.11.09",
+    title: "행복을 찾아가는 과정에서",
+    summary: "나의 세 가지 선택 기준과 나이츠 프런티어에서 찾고 싶은 답.",
+    tags: ["가치관", "나이츠 프런티어", "성장"],
+    url: "posts/my-values-and-frontier.html",
+    draft: false,
+  },
+  {
     category: "development",
     date: "2026.10.29",
     title: "GitHub Pages 개인 기술 블로그 구축",
