@@ -1555,13 +1555,14 @@ svg {
 .overview::before {
   position: absolute;
   z-index: -1;
-  right: -0.02em;
-  bottom: -0.22em;
+  right: clamp(18px, 4vw, 64px);
+  bottom: 12px;
   color: rgba(63, 125, 255, 0.06);
   content: "BPR0";
   font-family: var(--display);
-  font-size: clamp(13rem, 32vw, 28rem);
-  line-height: 0.72;
+  font-size: clamp(6rem, 24vw, 22rem);
+  line-height: 1;
+  white-space: nowrap;
   pointer-events: none;
 }
 
