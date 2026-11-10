@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="USENIX Security 2026 BLE Theft Auto 연구를 바탕으로 KARR·CarLink·Rockledge 애프터마켓 차량 장치의 인증 취약점과 대응·패치 공백을 분석합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>도난 방지 장치가 자동차를 열어 준 이유 — BLE Theft Auto 분석 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-2" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>BLE</span><i></i><span>AFTERMARKET</span><i></i><span>LOG_007</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_007 / VEHICLE SECURITY · CASE 03</span>
+          <h1>도난 방지 장치가<br /><em>자동차를 열어 준 이유</em></h1>
+          <p class="article-lede">
+            대시보드 안에 숨은 작은 BLE 모듈은 문 잠금과 이모빌라이저, 시동 배선에 직접 연결돼 있었다.
+            그런데 일부 제품은 모든 차량이 같은 비밀을 쓰거나, 차가 켜질 때 낯선 스마트폰의 등록을 허용했다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
+          <div><dt>READ</dt><dd>18 MIN</dd></div>
+          <div><dt>NODE</dt><dd>BLE / CAN</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#summary"><span>01</span>연구 개요</a></li>
+            <li><a href="#timeline"><span>02</span>공개와 패치</a></li>
+            <li><a href="#chain"><span>03</span>제품별 실패</a></li>
+            <li><a href="#root-cause"><span>04</span>근본 원인</a></li>
+            <li><a href="#response"><span>05</span>대응 평가</a></li>
+            <li><a href="#gaps"><span>06</span>패치 공백</a></li>
+            <li><a href="#lessons"><span>07</span>방어 설계</a></li>
+            <li><a href="#sources"><span>08</span>근거 자료</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>INCIDENT CLASSIFICATION</strong>
+            <p>
+              이 사례는 실제 절도 조직의 공격 기록이 아니라 UC San Diego 연구진의 <strong>책임 있는 취약점 연구</strong>다.
+              취약점 제보는 2025년에 시작됐지만, KARR 전체 대상 펌웨어가 나온 시점과 USENIX Security 논문 공개가 2026년이므로
+              최근 1년 내 공개·대응 사례로 다룬다. 연구진은 소유자의 명시적 동의 없이 차량을 시험하지 않았다.
+            </p>
+          </div>
+
+          <h2 id="summary">연구 개요 — 차주가 모르는 ‘합법적 하드웨어 임플란트’</h2>
+          <p>
+            애프터마켓 원격 제어 장치는 오래된 차량에도 스마트폰 문 열림, 원격 시동, 도난 방지 기능을 추가한다. 설치업체는
+            대시보드 안쪽에 모듈을 숨기고 도어록·경적·조명·이모빌라이저·점화 배선 또는 Body CAN에 연결한다.
+            기능상으로는 편리하지만, 차량의 원래 보안 체계를 우회해 민감 기능으로 가는 새 입구를 만드는 셈이다.
+          </p>
+          <p>
+            UC San Diego 연구진은 KARR, CarLink, Rockledge, DS4, EvoStart, Linkr 여섯 생태계의 애플리케이션 계층 BLE 보안을
+            역공학했다. 연구 당시 DS4·EvoStart·Linkr는 비교적 견고했지만, <strong>KARR·CarLink·Rockledge 세 제품</strong>에서는
+            페어링·인증·암호화의 치명적 문제가 발견됐다. 취약한 스마트폰 앱만 가까이 가져가도 문 잠금, 이모빌라이저,
+            원격 시동 같은 기능을 허가 없이 다룰 수 있는 조건이었다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="BLE Theft Auto 연구 대상 비교" tabindex="0">
+            <table class="article-table metrics-table">
+              <thead><tr><th>제품</th><th>연구 결과</th><th>주요 차량 기능</th></tr></thead>
+              <tbody>
+                <tr><td>KARR</td><td>차량 전체에 공유된 고정 키, 기본 모드에서 암호화 없음</td><td>문 잠금, 경적, 이모빌라이저</td></tr>
+                <tr><td>CarLink</td><td>안전하지 않은 자동 페어링 조건, 노출 정보로 재구성 가능한 키</td><td>문 잠금, 원격 시동</td></tr>
+                <tr><td>Rockledge</td><td>평문 정보와 앱 내 고정값에 의존한 암호화·인증</td><td>문 잠금, 이모빌라이저</td></tr>
+                <tr><td>DS4</td><td>물리 버튼과 공개키 기반 인증 등 견고한 설계</td><td>문 잠금, 원격 시동</td></tr>
+                <tr><td>EvoStart</td><td>차량별 키와 세션 키 기반 보호</td><td>문 잠금, 원격 시동</td></tr>
+                <tr><td>Linkr</td><td>차량별 키 기반 인증</td><td>문 잠금, 원격 시동</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            논문은 WiGLE 등 크라우드소싱 스캔에서 관찰된 순차 MAC 주소 패턴을 이용해 취약 장치 배포량을 추정했다.
+            KARR 약 285만 대와 CarLink 약 3만 2천 대, 합계 약 <strong>289만 대</strong>다. 이는 제조사 판매대장으로 확인한 정확한
+            피해 대수가 아니라 표본·주소 할당 가정에 기반한 연구 추정치다. 연구 웹사이트는 더 보수적으로 “200만 대 이상”이라고 쓴다.
+          </p>
+
+          <h2 id="timeline">공개와 패치 — 발견보다 어려웠던 ‘누가 업데이트할 것인가’</h2>
+          <div class="code-block" aria-label="BLE Theft Auto 공개 타임라인">
+            <div class="code-title"><span>2025—2026 / RESPONSIBLE DISCLOSURE</span><span>PATCH LIFECYCLE</span></div>
+            <pre><code>2025 JAN 21  KARR에 취약점 공개 · 현장 공격 시연 · 완화책 논의
+        │
+        ├─ 단기: 앱에서 고정 키 제거, 설치자 앱·과거 버전 노출 축소
+        └─ 장기: 장치별 키, 미활성 장치 BLE 비활성화, 펌웨어 개발
+2025 JUL 31  CarLink 측에 CarLink·Rockledge 문제 공개
+2025 DEC 17  회신 부족 후 Rockledge에 직접 재공개
+        │
+2026 JUL 20  모든 영향 KARR 차량용 펌웨어 공개
+2026 AUG     USENIX Security 2026 논문·연구 사이트 공개
+        └─ 차주에게 직접 앱을 통한 수동 업데이트 요청</code></pre>
+          </div>
+          <p>
+            KARR가 공개 후 즉시 단기 완화를 하고 약 1년에 걸쳐 기존 장치용 펌웨어를 만든 점은 긍정적이다. 하지만 BLE 전용
+            장치 대부분은 제조사가 원격으로 패치를 밀어 넣을 수 없다. 더구나 장치를 구매하지 않은 차주도 딜러가 미리 설치한
+            모듈을 달고 다닐 수 있어, 본인이 대상인지 모른 채 수동 업데이트 책임을 떠안는다.
+          </p>
+
+          <h2 id="chain">제품별 실패 — 암호화가 있어도 인증이 약하면 문은 열린다</h2>
+          <div class="code-block" aria-label="애프터마켓 BLE 공격 경로">
+            <div class="code-title"><span>LOCAL ATTACK FLOW</span><span>RADIO → PHYSICAL FUNCTION</span></div>
+            <pre><code>BLE 광고 신호
+   ├─ 근거리 스캔
+   └─ 크라우드소싱 스캔 DB에서 위치·제품 지문 탐색
+             ↓
+취약 모듈 근처로 이동
+             ↓
+공유 키 / 잘못된 페어링 / 재구성 가능한 암호 키 악용
+             ↓
+모듈이 스마트폰 명령을 정상 사용자로 인증
+             ↓
+도어록 · 경적 · 조명 · 이모빌라이저 · 원격 시동</code></pre>
+          </div>
+
+          <h3>KARR — 차량마다 다른 키가 아니었다</h3>
+          <p>
+            KARR 기본 프로토콜은 특정 스마트폰을 장치에 페어링하기보다 앱 화면에서 사용자가 볼 수 있는 장치를 제한했다.
+            실제 BLE 인증은 챌린지와 모듈 광고 정보, 앱에 들어 있는 두 개의 고정 키로 응답을 계산했다. 이 키는 사용자·딜러
+            권한별로 <strong>모든 KARR 모듈에 공유</strong>됐다. 하나의 앱에서 키를 알아내면 개별 차가 아니라 생태계 전체가 영향을
+            받는 구조였고, 기본 프로토콜에는 메시지 암호화도 없었다.
+          </p>
+
+          <h3>CarLink — 운전자가 차를 켜는 순간 공격자도 등록할 수 있었다</h3>
+          <p>
+            CarLink 모듈은 문이 열린 상태에서 엔진이 시작되면 페어링 모드에 들어갔다. 이때 주변의 공식 앱도 짧은 사용자 ID를
+            보내 자동 등록할 수 있었다. 앱에서 차량을 삭제해도 모듈 안의 ID는 지워지지 않았고, 차주는 저장된 페어링을 명확히
+            취소할 방법이 없었다. 암호화에는 AES가 쓰였지만, 난수·MAC 주소·앱의 고정 접미값처럼 관찰 또는 추출 가능한 재료로
+            키를 만들었기 때문에 알고리즘 이름만큼의 보호를 제공하지 못했다.
+          </p>
+
+          <h3>Rockledge — 암호문 밖의 값으로 암호 키를 만들었다</h3>
+          <p>
+            Rockledge 메시지는 AES-128을 사용했지만, 키 재료는 BLE 광고와 메시지에서 얻을 수 있는 값에 앱 안의 고정값을 더해
+            구성됐다. 공격자가 통신을 관찰하고 앱을 분석하면 트래픽을 복호화해 인증에 필요한 사용자 ID를 얻을 수 있었다.
+            연구진은 출시 초기라 실제 하드웨어를 확보하지 못했고, 이 부분은 앱 역공학에 기반한 분석이라는 한계가 있다.
+          </p>
+
+          <h3>표적을 어떻게 찾았나 — 보이지 않는 장치가 전파로 자신을 알렸다</h3>
+          <p>
+            애프터마켓 장치는 차종만 봐서는 구분하기 어렵지만 BLE 광고 이름·서비스 식별자·MAC 패턴은 계속 주변에 방송된다.
+            연구진은 도로 주행 스캔과 공개 크라우드소싱 데이터베이스를 결합해 제품을 식별하고 분포를 추정했다. KARR 창문
+            스티커나 전면 유리에 붙인 CarLink 모듈도 시각적 단서가 됐다. 실험에서 공격 가능 거리는 제품과 방향에 따라 수 m에서
+            수십 m였고, CarLink는 조건에 따라 150m 미만까지 관찰됐다.
+          </p>
+
+          <h2 id="root-cause">근본 원인 — 편의를 위해 무선 신뢰를 직접 설계한 대가</h2>
+          <h3>1. 표준 보안을 끄고 독자 프로토콜을 만들었다</h3>
+          <p>
+            차량 공유, 원격 권한 회수, 여러 스마트폰 등록 같은 기능은 운영체제의 일반 BLE 페어링 API만으로 다루기 어렵다.
+            여러 업체가 BLE 기본 보안을 낮춘 뒤 애플리케이션 계층에서 인증·암호화를 다시 만들었다. 문제는 암호 알고리즘 자체보다
+            키 생성·배포·회수·새 사용자 등록이라는 전체 수명주기였다.
+          </p>
+
+          <h3>2. 하나의 비밀이 차량 전체를 대표했다</h3>
+          <p>
+            공유 키는 제조와 지원이 간단하지만 한 장치의 역공학이 모든 장치의 침해로 바뀐다. 모바일 앱은 결국 사용자에게
+            배포되므로 안에 넣은 비밀은 회수될 수 있다. 최소한 장치별·사용자별 고유 키와 세션별 키를 사용하고, 유출 영향이
+            한 차량을 넘지 않도록 해야 했다.
+          </p>
+
+          <h3>3. 저신뢰 무선 인터페이스가 차량 기능에 직접 연결됐다</h3>
+          <p>
+            모듈은 단순한 블루투스 액세서리가 아니라 도어록, 이모빌라이저, 점화 배선과 CAN에 연결됐다. 따라서 BLE 인증의 작은
+            설계 오류가 앱 오작동으로 끝나지 않고 물리적 안전·재산 피해로 이어진다. 이 정도 권한이라면 OEM 디지털 키와 비슷한
+            수준의 물리적 소유 증명, 상호 인증, 재전송 방지가 필요하다.
+          </p>
+
+          <h3>4. 설치·소유권 이전·폐기까지 책임질 주체가 없었다</h3>
+          <p>
+            딜러, 제3자 설치업체, 장치 제조사, 앱 개발사가 나뉘어 있고 차주는 존재조차 모를 수 있다. 중고차로 넘어가면 최초
+            구매자 계정과 페어링이 남아 있는지, 새 차주에게 패치 안내가 갔는지 확인하기 더 어렵다. 기술적 취약점에 자산 관리
+            부재가 겹쳐 장기적인 N-day가 된다.
+          </p>
+
+          <h2 id="response">대응 평가 — KARR는 구조를 고쳤지만, 생태계 전체는 미완성이다</h2>
+          <p>
+            KARR는 단기적으로 앱이 인증된 웹 API에서 BLE 키를 받게 바꾸고, 과거 앱과 설치자 앱의 노출을 줄였다. 장기 펌웨어는
+            모듈마다 무작위 고유 키를 사용하도록 인증을 재설계하고, 구매자가 활성화하지 않은 No Sale 장치에서는 BLE 광고를
+            끄도록 했다. 공유 키가 유출돼도 한 차량에만 영향을 제한하는 근본적 개선이다.
+          </p>
+          <p>
+            2026년 7월 20일 모든 영향 KARR 차량용 펌웨어가 나왔고, 활성 고객은 앱 설정의 업데이트 확인 기능으로 설치할 수 있다.
+            미활성 차주는 KARR 앱에서 VIN을 확인하고 고객지원 절차를 거쳐야 한다. 연구진이 NHTSA에도 보고하고 논문 공개를 패치
+            이후로 미룬 것은 대규모 노출을 고려한 책임 있는 공개 방식이었다.
+          </p>
+          <p>
+            반면 CarLink는 차량 내부의 물리 버튼 등 명시적 동작으로만 페어링을 시작하라는 제안에 동의했지만, 논문 공개 자료에는
+            실제 배포된 수정 버전이 확인되지 않는다. Rockledge 역시 장치별 인증 키와 세션별 암호 키가 제안됐으나 완료 상태가
+            공개되지 않았다. 한 업체의 개선을 세 제품 전체의 해결로 일반화할 수 없다.
+          </p>
+
+          <h2 id="gaps">패치 공백 — 수동 업데이트는 영원히 100%가 되지 않는다</h2>
+          <ul class="article-checklist">
+            <li><span><strong>차주가 장치 존재를 모를 수 있다.</strong> 딜러가 미리 달고 구매자가 서비스를 거절해도 모듈은 대시보드 안에 남는다.</span></li>
+            <li><span><strong>대부분 수동 패치다.</strong> BLE 전용 장치는 중앙에서 업데이트를 강제할 수 없어, 앱 설치와 차량 근처 작업을 차주에게 의존한다.</span></li>
+            <li><span><strong>CarLink·Rockledge의 수정 완료가 불명확하다.</strong> 제안과 논의는 있었지만 공개된 배포 증거가 부족하다.</span></li>
+            <li><span><strong>중고차에서 통지가 끊긴다.</strong> 장치는 국경을 넘어 재판매되지만 제조사·딜러의 연락처와 실제 소유자가 달라질 수 있다.</span></li>
+            <li><span><strong>위치 프라이버시 문제도 남는다.</strong> 고정 광고 식별자와 크라우드소싱 스캔은 취약 장치가 자주 머무는 곳을 찾는 단서가 된다.</span></li>
+            <li><span><strong>제거도 단순하지 않다.</strong> 민감 배선에 연결된 모듈을 무작정 떼면 시동·도어 기능에 영향을 줄 수 있어 전문 설치점의 확인이 필요하다.</span></li>
+          </ul>
+
+          <h2 id="lessons">방어 설계 — 자동차 키를 만든다면 자동차 키처럼 보호하라</h2>
+          <div class="table-scroll" role="region" aria-label="애프터마켓 BLE 차량 장치 방어 통제" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>수명주기</th><th>필수 통제</th><th>보안 효과</th></tr></thead>
+              <tbody>
+                <tr><td>제조</td><td>장치별 비대칭 키 또는 고유 대칭 키를 보안 영역에 주입</td><td>한 제품 역공학이 전체 차량 침해로 번지는 것을 제한</td></tr>
+                <tr><td>페어링</td><td>차량 내부 버튼·NFC 키·PIN 등 물리적 소유 증명 후에만 새 사용자를 등록</td><td>주변 스마트폰의 몰래 등록 차단</td></tr>
+                <tr><td>세션</td><td>상호 인증, 세션별 키, 인증 암호화, 카운터·nonce 기반 재전송 방지</td><td>도청·위조·과거 명령 재사용 방지</td></tr>
+                <tr><td>권한</td><td>기간·기능이 제한된 서명 토큰과 명확한 사용자별 페어링 목록</td><td>차량 공유와 권한 회수를 안전하게 지원</td></tr>
+                <tr><td>차량</td><td>모듈이 낼 수 있는 CAN·배선 명령을 최소화하고 위험 명령에 상태 조건 적용</td><td>BLE 침해의 물리 영향 축소</td></tr>
+                <tr><td>프라이버시</td><td>회전 가능한 BLE 주소와 추적하기 어려운 광고 식별자</td><td>장치 지문·주차 위치 추적 완화</td></tr>
+                <tr><td>업데이트</td><td>서명 펌웨어, 안전한 롤백, 자동 OTA 또는 딜러 캠페인과 완료율 추적</td><td>수동 패치로 남는 영구 취약 장치 축소</td></tr>
+                <tr><td>소유권</td><td>VIN 연계 장치 등록부, 판매 시 페어링 초기화·새 차주 통지·폐기 절차</td><td>중고차와 미활성 장치의 관리 공백 제거</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note-box">
+            <strong>OWNER CHECK</strong>
+            <p>
+              KARR 스티커·앱을 본 적이 있거나 딜러가 도난 방지 옵션을 미리 장착한 차량이라면 공식 업데이트 안내에서 활성·미활성
+              차량 절차를 확인할 수 있다. 장치가 의심돼도 배선에 연결돼 있으므로 직접 분리하기보다 판매 딜러나 전문 설치점에
+              모델·펌웨어·업데이트 완료 여부를 요청하는 편이 안전하다.
+            </p>
+          </div>
+
+          <h2 id="sources">근거 자료와 한계</h2>
+          <p>
+            제품별 기술 내용과 배포 추정치는 USENIX Security 2026 논문을 기준으로 했다. 논문 저자들은 악용에 필요한 세부 사항을
+            의도적으로 공개하지 않았다. 약 289만 대는 BLE 스캔의 MAC 주소 분포를 바탕으로 한 추정이며, 현재 패치 완료 대수나
+            실제 악용 피해 대수를 의미하지 않는다.
+          </p>
+          <ul>
+            <li><a href="https://bleauto.sysnet.ucsd.edu/" target="_blank" rel="noreferrer">UC San Diego — BLE Theft Auto 연구 사이트</a> (2026)</li>
+            <li><a href="https://cseweb.ucsd.edu/~schulman/docs/sec26-bletheftauto.pdf" target="_blank" rel="noreferrer">USENIX Security 2026 — BLE Theft Auto: Evaluating the Security of Aftermarket BLE-based Automotive Remote Control Systems</a></li>
+            <li><a href="https://karrsecurity.com/karr-security-firmware-update-instructions" target="_blank" rel="noreferrer">KARR Security — Firmware Update Instructions</a></li>
+            <li><a href="https://www.nhtsa.gov/vehicle-safety/cybersecurity" target="_blank" rel="noreferrer">NHTSA — Vehicle Cybersecurity</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_007 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>

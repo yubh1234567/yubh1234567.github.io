@@ -271,6 +271,7 @@
 
 .article-body {
   grid-column: 2;
+  width: 100%;
   min-width: 0;
   max-width: 780px;
   color: #b8c5d8;
@@ -374,6 +375,9 @@
 }
 
 .code-block {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 40px 0;
   border: 1px solid #274269;
   background: #030812;
@@ -428,6 +432,9 @@
 }
 
 .table-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 42px 0;
   overflow-x: auto;
   border: 1px solid var(--line-strong);
@@ -569,6 +576,7 @@
 
   .article-hero h1 {
     font-size: clamp(2.8rem, 13vw, 4.5rem);
+    overflow-wrap: anywhere;
   }
 
   .article-meta {
@@ -608,6 +616,8 @@
   }
 
   .article-body {
+    width: 100%;
+    min-width: 0;
     max-width: none;
     font-size: 0.96rem;
   }
