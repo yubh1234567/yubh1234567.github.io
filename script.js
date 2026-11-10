@@ -15,6 +15,15 @@ const categories = [
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
   {
+    category: "research",
+    date: "2026.11.10",
+    title: "차량의 안드로이드가 해킹당해도, 제어권은 지킬 수 있을까",
+    summary: "USENIX Security 2025 Harness로 살펴본 AAOS 차량 제어의 신뢰 경계와 격리 설계.",
+    tags: ["차량 보안", "Android Automotive", "논문 리뷰"],
+    url: "posts/harness-aaos.html",
+    draft: false,
+  },
+  {
     category: "docs",
     date: "2026.11.09",
     title: "행복을 찾아가는 과정에서",

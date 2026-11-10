@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="USENIX Security 2025 논문 Harness를 통해 Android Automotive가 침해된 뒤에도 차량 제어 경로를 보호하는 방법과 평가 결과, 한계, 후속 실습 계획을 정리합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>차량의 안드로이드가 해킹당해도, 제어권은 지킬 수 있을까 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-1" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>AAOS</span><i></i><span>HYPERVISOR</span><i></i><span>LOG_003</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_003 / PAPER · CONFERENCE</span>
+          <h1>차량의 안드로이드가 해킹당해도<br /><em>제어권은 지킬 수 있을까</em></h1>
+          <p class="article-lede">
+            USENIX Security 2025 논문 <strong>〈Harness〉</strong>를 따라가며,
+            신뢰할 수 없는 Android Automotive 위에 안전한 차량 제어 경로를 만드는 방법을 살펴본다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
+          <div><dt>READ</dt><dd>11 MIN</dd></div>
+          <div><dt>NODE</dt><dd>논문 / 컨퍼런스</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#before"><span>01</span>읽기 전 질문</a></li>
+            <li><a href="#background"><span>02</span>기 — 왜 나왔나</a></li>
+            <li><a href="#approach"><span>03</span>승 — 무엇을 만들었나</a></li>
+            <li><a href="#results"><span>04</span>전 — 무엇을 증명했나</a></li>
+            <li><a href="#limits"><span>05</span>한계와 아쉬움</a></li>
+            <li><a href="#lesson"><span>06</span>결 — 무엇을 배웠나</a></li>
+            <li><a href="#next"><span>07</span>앞으로 할 일</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>PAPER PROFILE</strong>
+            <p>
+              Haochen Gong 외 7명, <em>Harness: Transparent and Lightweight Protection of Vehicle Control on Untrusted Android Automotive Operating System</em>,
+              34th USENIX Security Symposium, 2025, pp. 4265–4284.
+              <a href="https://www.usenix.org/conference/usenixsecurity25/presentation/gong-haochen" target="_blank" rel="noreferrer">공식 논문 페이지</a>
+            </p>
+          </div>
+
+          <p>
+            차에서 안드로이드 화면을 본다고 하면 스마트폰 화면을 차량에 비추는 Android Auto부터 떠올리기 쉽다.
+            이 논문이 다루는 <strong>Android Automotive OS(AAOS)</strong>는 다르다. 운영체제가 차량의 헤드유닛에서 직접 실행되고,
+            공조·도어·시트 같은 차량 기능과 연결된다. 편리하지만 공격자에게는 스마트폰 앱, 브라우저, 시스템 서비스에서 차량 ECU까지 이어지는 통로가 될 수 있다.
+          </p>
+          <p>
+            저자들은 대담한 가정에서 출발한다. “안드로이드가 이미 뚫려 공격자가 root 권한까지 얻었다면?”
+            보통 운영체제가 장악되면 게임이 끝났다고 생각한다. Harness는 그 상황에서도 <strong>사용자가 실제로 누른 차량 제어만 ECU에 도달하게 하자</strong>고 제안한다.
+            침입 자체를 완벽히 막는 대신, 침입 이후의 피해 경계를 다시 세우는 연구다.
+          </p>
+
+          <h2 id="before">읽기 전, 세 가지 질문</h2>
+
+          <h3>이 논문이 해결하려는 문제는 무엇인가?</h3>
+          <p>
+            AAOS의 차량 제어는 화면에 버튼을 그리는 HMI, 앱과 시스템 서비스 사이의 Binder 통신, VHAL(Vehicle Hardware Abstraction Layer),
+            차량 내부 네트워크를 차례로 지난다. 이 중 하나라도 조작되면 사용자가 누르지 않은 명령이 차량으로 갈 수 있다.
+            논문의 문제는 이 <strong>전체 제어 사슬</strong>을 침해된 운영체제로부터 어떻게 보호할 것인가이다.
+          </p>
+
+          <h3>왜 중요한가?</h3>
+          <p>
+            소프트웨어 정의 차량은 기능을 중앙 컴퓨터로 모으고 OTA로 계속 갱신한다. 개발 속도와 사용자 경험은 좋아지지만,
+            복잡한 IVI가 실제 차량 제어와 가까워진다. 음악 앱의 취약점이 공조나 도어 제어로 번지지 않도록 경계를 설계하는 일은
+            실무에서 말하는 <strong>defense in depth</strong>와 직접 연결된다.
+          </p>
+
+          <h3>기존 방식은 무엇이 부족했는가?</h3>
+          <p>
+            기존 TEE·격리 기술은 주로 하나의 앱이나 코드 조각을 보호했다. 그러나 AAOS의 차량 제어는 여러 프로세스가 공유 메모리와 Binder로 협력하고,
+            화면 출력과 터치 입력까지 신뢰해야 한다. 모든 프로그램을 수정하거나 별도의 보안 화면을 요구하면 폐쇄형 드라이버가 많은 차량 환경과 빠른 OTA 개발에 적용하기 어렵고,
+            운전자에게 확인 절차를 늘리는 것은 오히려 안전을 해칠 수 있다.
+          </p>
+
+          <h2 id="background">기 — 화면의 버튼에서 ECU까지</h2>
+
+          <p>공조 버튼을 한 번 누르는 동작을 단순화하면 다음과 같다.</p>
+
+          <div class="code-block" aria-label="AAOS 차량 제어 사슬">
+            <div class="code-title"><span>VEHICLE CONTROL CHAIN</span><span>AAOS</span></div>
+            <pre><code>운전자 터치
+  → 화면·입력 시스템(HMI)
+  → 차량 제어 앱
+  → CarService ── Binder IPC
+  → VHAL
+  → 차량 내부 네트워크(IVN)
+  → 공조·도어 등의 ECU</code></pre>
+          </div>
+
+          <p>
+            저자들은 이 흐름을 HMI, 처리, 출력의 세 단계로 나누고 커널과 사용자 영역에서 가능한 <strong>13가지 공격 전략</strong>을 정리했다.
+            가짜 시스템 서비스를 등록하거나, Binder 요청을 위조하거나, 공유 메모리를 바꾸거나, 가짜 터치를 주입하거나,
+            마지막에 차량 네트워크 명령을 직접 보내는 식이다. 서로 다른 공격처럼 보여도 목적은 하나다. 제어 사슬 어딘가에서 “사용자의 의도”를 공격자의 명령으로 바꾸는 것이다.
+          </p>
+
+          <div class="note-box">
+            <strong>THREAT MODEL</strong>
+            <p>
+              공격자는 AAOS의 취약점을 이용해 root 권한, 임의 메모리 접근, 코드 실행까지 얻었다. 반면 하이퍼바이저와 IOMMU,
+              Harness가 보호하는 프로그램 자체, 초기 secure boot는 신뢰한다. 물리 공격·DoS·사이드채널·원격 제어와 AI 모델 공격은 범위 밖이다.
+            </p>
+          </div>
+
+          <p>
+            이 위협 모델은 논문을 정확히 이해하는 열쇠다. Harness는 안드로이드 해킹을 탐지하는 백신이 아니다.
+            공격자가 AAOS를 장악한 뒤에도 보호 영역의 메모리, 통신, 화면과 터치를 위조하지 못하게 하는 <strong>마지막 방어선</strong>이다.
+          </p>
+
+          <h2 id="approach">승 — AAOS 안에 작은 신뢰 구역을 만들다</h2>
+
+          <p>
+            저자들은 차량 제어 앱, CarService, VHAL, HWC 등 꼭 필요한 구성요소만 최소 보호 영역으로 묶었다.
+            SystemServer처럼 크고 외부 인터페이스가 많은 구성요소는 일부러 제외한다. 보호해야 할 코드가 커질수록 그 안에 취약점이 들어올 가능성도 커지기 때문이다.
+            이것이 <strong>TCB(Trusted Computing Base)를 줄인다</strong>는 말의 실제 의미다.
+          </p>
+
+          <p>
+            그 아래에는 하이퍼바이저 권한으로 동작하는 <strong>Harness Lowvisor</strong>가 있다. Lowvisor는 각 보호 프로세스를 enclave로 격리하고,
+            운영체제가 요청한 메모리 매핑과 Binder 통신, 입출력을 검사한다. 복잡한 스케줄링은 기존 AAOS에 맡기되,
+            보안에 결정적인 순간만 더 높은 권한에서 확인하는 구조다.
+          </p>
+
+          <div class="code-block" aria-label="Harness 아키텍처">
+            <div class="code-title"><span>MINIMAL TRUST DOMAIN</span><span>HARNESS</span></div>
+            <pre><code>[신뢰하지 않는 영역]
+일반 앱 · SystemServer · AAOS 커널
+             │ 요청은 맡기되 결과를 검증
+─────────────┼────────────────────
+[보호 영역 / process enclaves]
+차량 제어 앱 · CarService · VHAL · HWC
+             │
+[Harness Lowvisor / Hypervisor]
+메모리 격리 · Binder 보호 · HMI 검증 · ECU 암호 채널</code></pre>
+          </div>
+
+          <h3>1. 공유를 금지하지 않고, 누가 무엇을 공유하는지 기억한다</h3>
+          <p>
+            안드로이드는 성능을 위해 프로세스끼리 메모리를 많이 공유한다. 모두 막으면 시스템이 작동하지 않고, 그대로 허용하면 침해된 커널이 다른 페이지를 끼워 넣을 수 있다.
+            Harness는 enclave가 요청한 주소·크기·권한을 기록하고, 공유 자원마다 위조하기 어려운 토큰을 붙인다.
+            실제 페이지가 그 의도와 일치할 때만 매핑한다.
+          </p>
+
+          <h3>2. Binder의 상대방과 메시지를 함께 확인한다</h3>
+          <p>
+            차량 앱과 CarService는 Binder로 대화한다. Lowvisor는 서비스 등록과 조회를 추적하고,
+            송신자·수신자가 같은 보호 영역에 속하는지 확인한다. 보호된 요청의 상태와 데이터를 별도 영역에 보관해 재생·변조를 막는다.
+            모든 메시지를 암호화하는 방식보다 Android Binder의 구조를 활용해 추가 복사를 한 번으로 줄였다.
+          </p>
+
+          <h3>3. 보이는 버튼과 실제 터치를 묶는다</h3>
+          <p>
+            메모리와 API만 지켜도 공격자가 화면 위에 가짜 버튼을 덮거나 터치 이벤트를 주입하면 차량을 움직일 수 있다.
+            Harness는 HWC를 보호하고 가상 GPU·입력 장치와 결합한다. 화면에 표시된 차량 제어 GUI의 위치와 실제 터치 좌표가 맞는지 검증해,
+            사용자가 누른 동작만 보호 앱으로 전달한다. 별도 보안 화면이나 추가 확인 버튼은 요구하지 않는다.
+          </p>
+
+          <h2 id="results">전 — 보안과 성능을 함께 평가하다</h2>
+
+          <p>
+            연구진은 Google Cuttlefish 위의 Android 13 AAOS와 KVM을 이용해 약 9.3K LoC 규모의 프로토타입을 만들었다.
+            하드웨어는 Cortex-A76 4코어와 8GB RAM을 갖춘 Raspberry Pi 5였다. 보안 측면에서는 IVI 관련 공개 CVE 26개와 기존 연구의 공격 경로 3개를 분석하고,
+            메모리 변조·가짜 서비스·터치 주입·보호 API 호출 등의 공격을 직접 모의했다. 제시한 공격 시뮬레이션은 모두 탐지했다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="Harness 주요 평가 결과" tabindex="0">
+            <table class="article-table metrics-table">
+              <thead>
+                <tr><th>평가 항목</th><th>결과</th><th>내 해석</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Geekbench</td><td>싱글 3.35% · 멀티 6.09% 저하</td><td>전체 연산 성능의 감소는 비교적 작다.</td></tr>
+                <tr><td>차량 API</td><td>지연시간 기하평균 22% 증가</td><td>보호 경로의 명령에는 확인 비용이 생긴다.</td></tr>
+                <tr><td>앱 시작</td><td>콜드 13.53% · 핫 29.68% 증가</td><td>비율은 크지만 절대 지연 증가는 0.2초 미만이었다.</td></tr>
+                <tr><td>메모리</td><td>2.82%–3.88% 증가</td><td>보호용 메타데이터와 enclave의 대가다.</td></tr>
+                <tr><td>입력 검증</td><td>60 events/s 유지</td><td>실험 장치의 최대 터치 처리량을 유지했다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            숫자를 볼 때 평균만 보면 안 된다. 페이지 폴트는 5.61배, enclave를 새로 만드는 fork 계열은 16배에서 128배까지 느려졌다.
+            Binder도 기본 실행보다 약 60%의 지연이 있었다. 다만 앱 시작과 차량 제어가 매 프레임마다 일어나는 연산은 아니고,
+            보호하지 않는 일반 프로그램의 오버헤드는 대부분 1% 안팎이었다. 저자들이 “가볍다”고 말할 근거는 있지만, 모든 연산이 가벼워진 것은 아니다.
+          </p>
+
+          <h2 id="limits">한계와 아쉬운 점</h2>
+
+          <h3>실차 검증이 아니라 프로토타입 검증이다</h3>
+          <p>
+            평가는 Raspberry Pi 5와 Cuttlefish에서 수행됐다. AOSP의 차량 API는 실제 차량 네트워크 지연을 포함하지 않고,
+            보드의 Cuttlefish가 GPU 가속을 지원하지 않아 그래픽 성능도 측정하지 않았다. 따라서 양산 헤드유닛에서 같은 결과가 나온다고 단정할 수 없다.
+          </p>
+
+          <h3>신뢰를 없앤 것이 아니라 아래로 옮겼다</h3>
+          <p>
+            AAOS는 불신하지만 하이퍼바이저, IOMMU, 초기 부팅 과정과 보호 앱의 무결성은 신뢰한다.
+            Lowvisor나 보호 앱 자체에 취약점이 있으면 새 단일 실패 지점이 된다. 또한 논문이 제외한 DoS에서는 공격자가 차량 명령을 위조하지 못하더라도 서비스를 멈추게 할 수 있다.
+          </p>
+
+          <h3>“사용자의 의도”도 정의가 필요하다</h3>
+          <p>
+            올바른 GUI 위치에서 실제 터치가 들어왔다는 사실은 강한 신호다. 하지만 운전자가 속았거나 보호 앱의 로직이 잘못됐거나,
+            enclave가 신뢰하지 않는 외부 데이터를 소비하는 경우까지 자동으로 안전해지는 것은 아니다. 논문도 외부 Android API에서 들어오는 데이터를 체계적으로 검사하는 일을 후속 과제로 남겼다.
+          </p>
+
+          <h3>재현 비용이 낮지는 않다</h3>
+          <p>
+            아티팩트가 공개되어 있다는 점은 장점이지만, 전체 빌드에는 x86 Ubuntu 환경과 300GB 이상의 저장공간이 권장되고 Raspberry Pi 5가 필요하다.
+            일부 구성요소는 협력 업체와의 비밀유지 계약 때문에 공개하지 않았다. 학부생이 첫날부터 전체 시스템을 재현하기보다 단계를 나누는 편이 현실적이다.
+          </p>
+
+          <div class="note-box">
+            <strong>MY VERDICT</strong>
+            <p>
+              Harness의 가장 좋은 점은 “안드로이드를 완벽하게 만들겠다”는 약속을 하지 않는다는 것이다.
+              침해를 전제로 하고, 실제 피해를 일으키는 차량 제어 사슬에 최소 신뢰 경계를 다시 긋는다.
+              다만 아직 양산차 적용 결과가 아닌 연구용 프로토타입이라는 꼬리표를 떼어 말해서는 안 된다.
+            </p>
+          </div>
+
+          <h2 id="lesson">결 — 내가 배운 것은 격리 기술보다 경계 설정이었다</h2>
+
+          <p>
+            논문을 읽기 전에는 root 권한을 빼앗기면 모든 방어가 끝난다고 생각했다. Harness는 “무엇을 잃었고, 무엇은 아직 지킬 수 있는가”를 다시 묻는다.
+            IVI의 풍부한 기능은 그대로 두고, 차량 제어에 필요한 최소 구성요소만 더 높은 권한에서 보호한다. 이것은 차량뿐 아니라 결제 단말,
+            스마트팩토리 HMI, 의료기기처럼 복잡한 운영체제가 물리 장치를 움직이는 환경에도 적용할 수 있는 사고방식이다.
+          </p>
+          <p>
+            실무 관점에서 특히 남은 단어는 <strong>신뢰 경계</strong>다. 어떤 컴포넌트를 TCB에 넣었는지, 왜 SystemServer는 제외했는지,
+            운영체제가 침해된 뒤에도 어떤 속성을 보장하는지를 설명할 수 있어야 한다. 면접에서도 “이 기술이 안전하다”보다
+            “무엇을 신뢰하고 어떤 공격은 막지 못한다”라고 답하는 편이 훨씬 정확하다.
+          </p>
+
+          <h2 id="next">앞으로 할 일 — 읽은 논문을 포트폴리오로 바꾸기</h2>
+
+          <h3>1. 이어서 공부할 것</h3>
+          <ol>
+            <li><strong>AAOS 기초:</strong> CarService, VHAL, AIDL, Binder가 버튼 입력을 차량 속성으로 전달하는 흐름을 직접 그린다.</li>
+            <li><strong>격리 기초:</strong> VM·하이퍼바이저·TEE·enclave·TCB의 차이를 한 장으로 비교한다.</li>
+            <li><strong>후속 논문:</strong> <em>ReZone</em>(USENIX Security 2022)으로 TEE의 권한 축소를, <em>MyTEE</em>(NDSS 2023)로 Arm 기반 격리 설계를 비교한다.</li>
+            <li><strong>차량 네트워크 연결:</strong> <em>A Formal Security Analysis of CAN XL</em>(USENIX Security 2026)을 읽어 보호된 VHAL 이후의 통신까지 범위를 넓힌다.</li>
+          </ol>
+
+          <h3>2. 직접 해볼 안전한 실습</h3>
+          <p>
+            먼저 Android Emulator에서 AIDL 기반 앱과 서비스를 만들고, 정상 앱과 권한 없는 앱이 같은 API를 호출하는 상황을 비교한다.
+            그다음 간단한 “공조 켜기” mock VHAL을 만들어 허용된 호출자만 상태를 바꾸게 한다. 이 단계에서는 실제 차량이나 ECU에 연결하지 않는다.
+            마지막으로 장비와 저장공간을 확보하면 저자들의 prebuilt image로 Harness 아티팩트의 공격 시뮬레이션과 성능 측정을 재현한다.
+          </p>
+
+          <h3>3. 연구·프로젝트로 확장할 방향</h3>
+          <p>
+            내가 발전시킨다면 <strong>차량 제어 신뢰 경계 시각화 도구</strong>를 만들고 싶다. AAOS의 서비스와 Binder 호출 관계를 입력하면
+            차량 제어 API에 도달하는 경로, 보호 영역에 들어가야 할 구성요소, 신뢰하지 않는 데이터가 경계를 넘는 지점을 표시하는 도구다.
+            이후 작은 정책 엔진을 붙여 “표시된 버튼에서 시작된 요청인가”, “허용된 서비스가 호출했는가”를 테스트로 검증할 수 있다.
+          </p>
+
+          <h3>4. 14일 실행 계획</h3>
+          <ul class="article-checklist">
+            <li><strong>1–3일:</strong> AAOS·CarService·VHAL·Binder 용어를 정리하고 제어 사슬을 다시 그린다.</li>
+            <li><strong>4–6일:</strong> AIDL 앱–서비스 예제를 구현하고 권한 검사 전후를 비교한다.</li>
+            <li><strong>7–9일:</strong> Harness의 13개 공격 전략을 메모리·IPC·HMI·출력 네 범주로 재분류한다.</li>
+            <li><strong>10–11일:</strong> 논문의 성능표를 다시 계산하고 평균값이 숨기는 큰 오버헤드를 찾는다.</li>
+            <li><strong>12–13일:</strong> Harness, TEE, 일반 VM의 신뢰 경계와 장단점을 한 장으로 정리한다.</li>
+            <li><strong>14일:</strong> 코드·다이어그램·배운 점을 후속 글로 공개하고 3분 면접 답변을 녹음한다.</li>
+          </ul>
+
+          <div class="note-box">
+            <strong>INTERVIEW PITCH</strong>
+            <p>
+              “AAOS가 root 권한까지 침해됐다고 가정해도 차량 제어 앱–CarService–VHAL–HMI를 프로세스 단위 enclave로 격리하는 Harness를 분석했습니다.
+              보안 효과뿐 아니라 차량 API 22%, Geekbench 3.35%·6.09%의 오버헤드와 실차 미검증이라는 한계까지 함께 비교했습니다.”
+            </p>
+          </div>
+
+          <h3>자료</h3>
+          <ul>
+            <li><a href="https://www.usenix.org/conference/usenixsecurity25/presentation/gong-haochen" target="_blank" rel="noreferrer">USENIX Security 2025 공식 논문 페이지</a></li>
+            <li><a href="https://www.usenix.org/system/files/usenixsecurity25-gong-haochen.pdf" target="_blank" rel="noreferrer">논문 PDF</a></li>
+            <li><a href="https://doi.org/10.5281/zenodo.14723474" target="_blank" rel="noreferrer">저자 공개 재현 아티팩트</a></li>
+            <li><a href="https://source.android.com/docs/automotive/security/vehicle_system_isolation" target="_blank" rel="noreferrer">Android Automotive 차량 시스템 격리 문서</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_003 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
