@@ -15,6 +15,33 @@ const categories = [
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
   {
+    category: "docs",
+    date: "2026.11.10",
+    title: "CTF가 현실의 공격이 된 순간",
+    summary: "영국 AISI의 AI 에이전트 통제 실패를 통해 본 자율 시스템의 허가 경계, 격리, 실시간 감독.",
+    tags: ["보안 사고", "AI Agent", "Containment"],
+    url: "posts/aisi-agent-control-incident.html",
+    draft: false,
+  },
+  {
+    category: "docs",
+    date: "2026.11.10",
+    title: "보안 도구가 침입 경로가 된 날",
+    summary: "Trivy 공급망 손상이 EU 집행위원회 AWS 키 탈취와 91.7GB 유출로 이어진 연쇄 실패.",
+    tags: ["보안 사고", "Supply Chain", "CI/CD"],
+    url: "posts/eu-trivy-supply-chain-breach.html",
+    draft: false,
+  },
+  {
+    category: "docs",
+    date: "2026.11.10",
+    title: "일회용 비밀번호를 넘겨준 5시간",
+    summary: "Betterment 음성 피싱 사고로 살펴본 피싱 가능 MFA, SaaS 권한, 기기 신뢰 정책의 차이.",
+    tags: ["보안 사고", "Vishing", "Identity"],
+    url: "posts/betterment-vishing-incident.html",
+    draft: false,
+  },
+  {
     category: "bug-bounty",
     date: "2026.11.10",
     title: "무작위 입력은 어떻게 취약점을 찾는가",

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="2026년 Betterment 보안 사고를 시간순으로 재구성하고, 음성 피싱과 일회용 비밀번호를 통한 Okta 계정 탈취의 원인·대응·남은 과제를 분석합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>일회용 비밀번호를 넘겨준 5시간 — Betterment 사고 분석 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-1" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>IDENTITY</span><i></i><span>VISHING</span><i></i><span>LOG_005</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_005 / SECURITY INCIDENT · CASE 01</span>
+          <h1>일회용 비밀번호를<br /><em>넘겨준 5시간</em></h1>
+          <p class="article-lede">
+            2026년 Betterment 사고에서 공격자는 방화벽을 뚫지 않았다.
+            직원의 신원을 빌려 정상 로그인 절차를 통과했다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
+          <div><dt>READ</dt><dd>12 MIN</dd></div>
+          <div><dt>NODE</dt><dd>Documentation</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#summary"><span>01</span>사건 개요</a></li>
+            <li><a href="#timeline"><span>02</span>시간순 재구성</a></li>
+            <li><a href="#chain"><span>03</span>공격 경로</a></li>
+            <li><a href="#root-cause"><span>04</span>근본 원인</a></li>
+            <li><a href="#response"><span>05</span>대응 평가</a></li>
+            <li><a href="#gaps"><span>06</span>미흡한 부분</a></li>
+            <li><a href="#lessons"><span>07</span>재발 방지</a></li>
+            <li><a href="#sources"><span>08</span>근거 자료</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>READING RULE</strong>
+            <p>
+              인원·시간·영향 범위는 Betterment의 2026년 3월 30일 최종 보고서를 기준으로 했다.
+              공식 보고서가 밝힌 사실과, 그 사실에서 도출한 방어 관점의 평가는 문단 안에서 명확히 구분한다.
+            </p>
+          </div>
+
+          <h2 id="summary">사건 개요 — 침입보다 ‘정상처럼 보인 접근’이 문제였다</h2>
+          <p>
+            2026년 1월 9일, 공격자는 미국의 디지털 투자 서비스 Betterment 직원에게 전화를 걸었다.
+            발신자 표시에는 <strong>“Betterment IT”</strong>가 나타났고, 공격자는 음성 피싱 키트를 이용해
+            직원의 계정 정보와 다중 인증용 일회용 비밀번호를 받아냈다. 이 정보로 공격자 소유 컴퓨터를 새 기기로 등록하고
+            Okta 통합 인증 포털에 들어갔다.
+          </p>
+          <p>
+            이후 마케팅·운영용 웹 애플리케이션 여러 개에 접근해 약 140만 명의 고객 및 비즈니스 연락처 데이터를 가져갔다.
+            또 약 46만 명에게 Betterment가 보낸 것처럼 보이는 가짜 암호화폐 프로모션을 이메일과 모바일 푸시로 발송했다.
+            고객 계좌·비밀번호·로그인 정보와 거래 시스템은 침해되지 않았지만, 공격은 데이터 유출·브랜드 사칭·사기 시도까지 이어졌다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="Betterment 사고 핵심 수치" tabindex="0">
+            <table class="article-table metrics-table">
+              <thead><tr><th>항목</th><th>확인된 내용</th><th>의미</th></tr></thead>
+              <tbody>
+                <tr><td>초기 접근</td><td>위조 발신자 표시 + 음성 피싱 + OTP 탈취</td><td>비밀번호와 코드가 맞아도 사용자가 진짜인지는 보장하지 못했다.</td></tr>
+                <tr><td>활동 시간</td><td>13:31~18:18 EST, 약 4시간 47분</td><td>공격 메시지가 발송된 뒤에야 사고가 선언됐다.</td></tr>
+                <tr><td>데이터 영향</td><td>약 140만 명</td><td>대부분 이름 또는 이름·이메일이지만 일부는 주소·전화번호·생년월일이 결합됐다.</td></tr>
+                <tr><td>사기 메시지</td><td>약 46만 명</td><td>신뢰받는 공식 채널 자체가 공격 수단으로 바뀌었다.</td></tr>
+                <tr><td>보호된 영역</td><td>고객 계좌·거래 시스템</td><td>관리 기기만 허용하는 기기 신뢰 정책이 별도의 방어선으로 작동했다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="timeline">시간순 재구성 — 탐지까지 4시간 15분</h2>
+          <div class="code-block" aria-label="Betterment 사고 타임라인">
+            <div class="code-title"><span>JAN 09, 2026 / EST</span><span>INCIDENT</span></div>
+            <pre><code>13:31  직원 계정 탈취 · 공격자 기기 등록 · Okta SSO 접근
+  │
+  ├─ 마케팅·운영 애플리케이션 접근
+  ├─ 약 140만 명 관련 데이터 획득
+  │
+17:46  가짜 암호화폐 메시지 발송 → 탐지 계기
+18:03  사고 선언
+18:05  제3자 마케팅 앱의 사용자 계정 정지
+18:09  Okta 계정 비활성화 · 활성 세션 취소
+18:18  공격자 활동 완전 중단
+19:00  고객 경고 이메일·소셜 미디어 공지</code></pre>
+          </div>
+          <p>
+            본 사고는 1월 9일로 끝나지 않았다. 1월 12일 공격 집단은 암호화폐 지급을 요구했고,
+            13일에는 웹과 모바일 앱을 겨냥한 DDoS 공격이 발생했다. 14~16일에는 일부 직원에게 협박과 괴롭힘이 이어졌으며,
+            23일 탈취 데이터가 일시적으로 다크웹 유출 사이트에 게시됐다. Betterment는 몸값을 지급하지 않았다.
+          </p>
+
+          <h2 id="chain">공격 경로 — MFA를 깨지 않고 통과했다</h2>
+          <ol>
+            <li><strong>신뢰를 먼저 만들었다.</strong> 발신자 표시를 사내 IT로 위조해 지원 부서가 전화한 상황을 연출했다.</li>
+            <li><strong>지식 요소와 인증 요소를 함께 받았다.</strong> 계정 자격 증명뿐 아니라 당시 유효한 일회용 비밀번호까지 실시간으로 넘겨받았다.</li>
+            <li><strong>공격자 기기를 정상 기기로 등록했다.</strong> 한 번의 피싱 성공을 이후 세션의 신뢰로 바꿨다.</li>
+            <li><strong>SSO 뒤의 SaaS로 이동했다.</strong> 마케팅과 운영 앱은 고객 연락처 조회와 대량 메시지 발송이라는 높은 영향력을 가지고 있었다.</li>
+            <li><strong>공식 채널을 사기에 사용했다.</strong> 낯선 발신자가 아니라 Betterment의 이메일·푸시 채널에서 메시지가 나가도록 했다.</li>
+          </ol>
+          <p>
+            따라서 “MFA가 있었는데도 뚫렸다”는 설명은 정확하지 않다. 공격자는 MFA를 우회한 것이 아니라
+            <strong>피싱 가능한 인증 수단과 신규 기기 등록 절차를 악용해 MFA를 정상적으로 완료</strong>했다.
+            OTP는 비밀번호 하나만 쓰는 것보다 안전하지만, 사용자가 코드를 공격자에게 전달하면 출처를 암호학적으로 검증하지 못한다.
+          </p>
+
+          <h2 id="root-cause">근본 원인 — 사람 한 명의 실수로 끝내면 놓치는 것</h2>
+          <h3>1. 피싱 가능한 인증 방식</h3>
+          <p>
+            직접 원인은 직원이 공격자에게 자격 증명과 OTP를 제공한 것이다. 그러나 근본 원인을 개인의 주의 부족으로만 쓰면
+            같은 공격이 반복된다. 당시 인증 흐름은 원격 공격자가 전달받은 코드를 그대로 재사용할 수 있었고,
+            그 결과 공격자 기기의 등록까지 허용했다. 고위험 계정의 인증 강도가 전화 한 통에 의해 낮아질 수 있었던 구조가 첫 번째 원인이다.
+          </p>
+
+          <h3>2. SaaS 권한과 업무 영향의 결합</h3>
+          <p>
+            마케팅 애플리케이션은 흔히 핵심 금융 시스템보다 낮은 위험으로 분류된다. 하지만 이 앱은 대규모 고객 데이터와
+            공식 발송 채널을 동시에 다뤘다. 공격자는 돈을 직접 이체하지 못했지만 46만 명에게 사기 메시지를 보낼 수 있었다.
+            <strong>데이터 조회 권한과 대량 발송 권한이 한 사용자 세션 안에서 연결된 것</strong>은 피해를 확대했다.
+          </p>
+
+          <h3>3. 영역별로 달랐던 기기 신뢰 정책</h3>
+          <p>
+            거래 시스템은 유효한 계정 정보가 있더라도 Betterment 관리 기기에서만 접근하도록 제한되어 있었고, 이 통제가 실제 피해를 막았다.
+            반대로 공식 보고서에는 마케팅·운영 앱에도 같은 수준의 관리 기기 제한이 적용됐다는 설명이 없다.
+            이는 확인된 미적용 사실이라고 단정할 수는 없지만, <strong>업무 SaaS의 보호 수준이 데이터와 발송 권한의 실제 영향에 비해 충분했는지</strong>
+            재검토해야 한다는 신호다.
+          </p>
+
+          <h3>4. 행위 탐지가 결과보다 늦었다</h3>
+          <p>
+            공격자는 13시 31분에 들어왔고 사고 선언은 가짜 프로모션이 발송된 뒤인 18시 3분이었다.
+            보고서는 정확한 최초 탐지 신호를 공개하지 않았지만, 공개된 타임라인만 놓고 보면 신규 기기 등록, 낯선 위치의 SSO,
+            대량 데이터 접근 단계에서 공격을 차단하지 못했다. 메시지 발송이라는 가시적 결과가 탐지 계기가 된 셈이다.
+          </p>
+
+          <h2 id="response">대응 평가 — 빨랐던 봉쇄, 효과가 입증된 분리</h2>
+          <p>
+            사고 선언 후 대응 속도는 빨랐다. 2분 뒤 마케팅 앱 계정이 정지됐고, 6분 뒤 Okta 계정과 세션이 취소됐으며,
+            15분 안에 활동이 중단됐다. 한 시간 이내에 고객 경고도 발송됐다. 외부 법률 자문, CrowdStrike 포렌식,
+            HaystackID의 개인정보 영향 분석을 병행하고 법 집행 기관과 IOC를 공유한 것도 대응 범위를 넓혔다.
+          </p>
+          <p>
+            가장 중요한 성공은 사고 이후가 아니라 사고 이전에 있었다. 관리 기기만 거래 시스템에 들어오도록 한 기기 신뢰 정책 덕분에
+            유효한 SSO 인증을 가진 공격자도 고객 계좌와 거래 시스템으로 이동하지 못했다. 이는 <strong>인증 성공과 자원 접근 허용을 분리한 통제</strong>가
+            실제 침해에서 어떤 차이를 만드는지 보여 준다.
+          </p>
+          <p>
+            Betterment는 피해 고객의 손실을 보전했고, 모든 비하드웨어 MFA를 종료했으며, 새 인증 수단 등록을 더 엄격하게 제한했다.
+            모니터링·경보, 피싱 훈련, DDoS 방어도 강화했다. 특히 하드웨어 기반 인증으로의 전환은 이번 초기 접근 경로를 직접 겨냥한다.
+          </p>
+
+          <h2 id="gaps">보완이 미흡했던 부분 — 보고서가 답하지 않은 질문</h2>
+          <ul class="article-checklist">
+            <li><span><strong>신규 기기 등록의 상세 통제가 공개되지 않았다.</strong> 재인증, 관리자 승인, 지연 시간, 기존 기기 확인 중 무엇이 추가됐는지 알 수 없다.</span></li>
+            <li><span><strong>140만 건 접근을 가능하게 한 권한 구조가 불명확하다.</strong> 단일 계정이 어떤 앱에서 어느 필드를 조회·내보냈는지 보고서는 세분화하지 않았다.</span></li>
+            <li><span><strong>탐지 공백의 원인 설명이 부족하다.</strong> 신규 기기·비정상 위치·대량 조회가 왜 발송 전 차단 신호가 되지 못했는지 공개하지 않았다.</span></li>
+            <li><span><strong>‘대부분 이름 또는 이메일’은 위험이 낮다는 뜻이 아니다.</strong> 금융 서비스 고객이라는 관계 정보와 결합하면 표적 피싱의 정밀도가 높아진다.</span></li>
+            <li><span><strong>제3자 앱별 격리 계획이 보이지 않는다.</strong> 거래 시스템에서 성공한 기기 신뢰·최소 권한 원칙을 다른 고영향 SaaS까지 어떻게 확장할지 구체성이 부족하다.</span></li>
+          </ul>
+          <p>
+            이 평가는 Betterment가 아무 조치도 하지 않았다는 뜻이 아니다. 공개 보고서는 핵심 개선 방향을 제시했지만,
+            외부 독자가 재발 가능성을 평가하기에는 인증 등록 정책, SaaS 권한 축소, 탐지 기준의 세부 정보가 제한적이라는 의미다.
+          </p>
+
+          <h2 id="lessons">재발 방지 — “직원이 속지 않게”보다 강한 설계</h2>
+          <div class="table-scroll" role="region" aria-label="재발 방지 통제 우선순위" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>우선순위</th><th>통제</th><th>이번 사고에서 막는 단계</th></tr></thead>
+              <tbody>
+                <tr><td>P0</td><td>FIDO2·WebAuthn 기반 피싱 저항 MFA를 관리자·고영향 SaaS 사용자에게 강제</td><td>전달받은 OTP로 공격자 사이트에서 인증하는 단계</td></tr>
+                <tr><td>P0</td><td>새 인증기·새 기기 등록에 기존 신뢰 기기 확인, 별도 승인, 시간 지연 적용</td><td>공격자 컴퓨터를 정상 기기로 바꾸는 단계</td></tr>
+                <tr><td>P0</td><td>고객 데이터 내보내기와 대량 발송 권한 분리, 이중 승인 적용</td><td>한 세션으로 데이터 탈취와 사기 발송을 모두 수행하는 단계</td></tr>
+                <tr><td>P1</td><td>관리 기기 조건을 마케팅·고객지원 SaaS까지 확대</td><td>SSO 성공 뒤 비관리 기기에서 앱에 접근하는 단계</td></tr>
+                <tr><td>P1</td><td>신규 기기 + 낯선 위치 + 대량 조회·발송을 묶은 행위 기반 탐지</td><td>피해가 고객에게 도달하기 전의 체류 구간</td></tr>
+                <tr><td>P2</td><td>헬프데스크 콜백, 사내 앱 챌린지, 발신자 표시 불신을 포함한 훈련</td><td>“사내 IT”라는 전화 서사를 신뢰하는 단계</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note-box">
+            <strong>CORE LESSON</strong>
+            <p>
+              교육은 필요하지만 마지막 방어선이 될 수 없다. 사용자가 속더라도 피싱된 인증 정보가 다른 기기에서 작동하지 않고,
+              한 계정이 조회·내보내기·대량 발송을 모두 할 수 없으며, 비정상 행위가 결과 전에 멈추도록 설계해야 한다.
+            </p>
+          </div>
+
+          <h2 id="sources">근거 자료와 한계</h2>
+          <p>
+            이 글의 사건 수치와 타임라인은 피해 기업이 자체 조사와 외부 포렌식 이후 공개한 자료를 기반으로 한다.
+            공격자 측 주장이나 유출 데이터 원문은 검증·인용하지 않았다. 공식 보고서 역시 조사 범위와 공개 정책의 영향을 받으므로,
+            공개되지 않은 앱별 권한과 로그에 대해서는 단정하지 않았다.
+          </p>
+          <ul>
+            <li><a href="https://www.betterment.com/resources/security-incident-report-january-2026" target="_blank" rel="noreferrer">Betterment — Security Incident Report: January 2026</a> (2026-03-30)</li>
+            <li><a href="https://www.betterment.com/customer-update" target="_blank" rel="noreferrer">Betterment — January 9 Security Incident updates</a></li>
+            <li><a href="https://www.okta.com/blog/threat-intelligence/phishing-kits-adapt-to-the-script-of-callers/" target="_blank" rel="noreferrer">Okta — Phishing kits adapt to the script of callers</a></li>
+            <li><a href="https://www.cisa.gov/sites/default/files/2023-01/fact-sheet-implementing-phishing-resistant-mfa-508c.pdf" target="_blank" rel="noreferrer">CISA — Implementing phishing-resistant MFA</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_005 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
