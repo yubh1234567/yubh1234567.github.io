@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="퍼징의 동작 원리와 분류 기준을 정리하고 AFL++, libFuzzer, Jackalope, Honggfuzz, LibAFL, Jazzer, Atheris, Fuzzilli의 차이와 선택 기준을 비교합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>무작위 입력은 어떻게 취약점을 찾는가 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-1" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>FUZZING</span><i></i><span>FEEDBACK</span><i></i><span>LOG_004</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_004 / BUG BOUNTY · DOCUMENTATION</span>
+          <h1>무작위 입력은 어떻게<br /><em>취약점을 찾아내는가</em></h1>
+          <p class="article-lede">
+            퍼징의 기본 원리부터 입력 생성·피드백·실행 모델에 따른 분류까지,
+            대표 퍼저 8종을 같은 기준 위에 놓고 비교했다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
+          <div><dt>READ</dt><dd>14 MIN</dd></div>
+          <div><dt>NODE</dt><dd>Bug Bounty</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#definition"><span>01</span>퍼징이란</a></li>
+            <li><a href="#workflow"><span>02</span>작동 흐름</a></li>
+            <li><a href="#taxonomy"><span>03</span>퍼징의 종류</a></li>
+            <li><a href="#vocabulary"><span>04</span>핵심 용어</a></li>
+            <li><a href="#comparison"><span>05</span>퍼저 비교</a></li>
+            <li><a href="#details"><span>06</span>도구별 특징</a></li>
+            <li><a href="#selection"><span>07</span>선택 기준</a></li>
+            <li><a href="#limits"><span>08</span>한계와 운영</a></li>
+            <li><a href="#lesson"><span>09</span>배운 점</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>MISSION #19</strong>
+            <p>
+              목표는 퍼징의 개념과 종류를 이해하고 여러 퍼저의 차이를 설명하는 것이다.
+              아래 내용은 AFL++, LLVM, Google Project Zero, OSS-Fuzz와 각 프로젝트의 공식 문서를 기준으로 정리했다.
+            </p>
+          </div>
+
+          <p>
+            “퍼징은 프로그램에 무작위 값을 넣어 보는 테스트”라는 설명은 반만 맞다. 현대 퍼저는 단순히 난수를 던지는 데서 끝나지 않는다.
+            이전 입력을 변형하고, 그 입력이 새로운 코드 경로를 열었는지 관찰하고, 가치 있는 입력만 코퍼스에 남긴 뒤 다시 변형한다.
+            즉, <strong>자동 생성·실행·관찰·학습을 매우 빠르게 반복하는 탐색 과정</strong>에 가깝다.
+          </p>
+
+          <h2 id="definition">퍼징이란 무엇인가</h2>
+          <p>
+            퍼징(fuzzing 또는 fuzz testing)은 정상·비정상 입력을 자동으로 생성하거나 변형해 대상 프로그램에 반복적으로 전달하고,
+            충돌·멈춤·메모리 오류·예외·검증 실패 같은 비정상 동작을 찾는 테스트 기법이다. 사람이 예상한 예제만 확인하는 단위 테스트와 달리,
+            개발자가 떠올리지 못한 입력 공간을 넓고 지속적으로 탐색하는 데 강점이 있다.
+          </p>
+          <p>
+            다만 “크래시가 없었다”는 사실이 “취약점이 없다”는 뜻은 아니다. 퍼저는 준비한 하네스와 오라클이 관찰할 수 있는 문제만 찾는다.
+            메모리 손상을 즉시 드러내는 AddressSanitizer, 정의되지 않은 동작을 잡는 UndefinedBehaviorSanitizer처럼
+            <strong>실패를 보이게 만드는 장치</strong>를 함께 쓰는 이유다.
+          </p>
+
+          <div class="note-box">
+            <strong>ONE-LINE MODEL</strong>
+            <p>퍼징 = 입력 탐색기 + 대상 실행기 + 피드백 + 실패 판정기 + 재현 가능한 증거.</p>
+          </div>
+
+          <h2 id="workflow">현대적인 퍼저는 어떻게 움직이는가</h2>
+          <div class="code-block" aria-label="커버리지 기반 퍼징 흐름">
+            <div class="code-title"><span>COVERAGE-GUIDED LOOP</span><span>FUZZ</span></div>
+            <pre><code>초기 시드 코퍼스
+      │
+      ▼
+입력 선택 ─→ 변형(mutation) ─→ 하네스로 대상 실행
+  ▲                                  │
+  │                                  ▼
+  └──── 새 경로면 코퍼스에 보존 ← 커버리지 피드백
+                                      │
+                 크래시·행·sanitizer 오류면 별도 저장
+                                      │
+                                      ▼
+                        중복 제거 → 최소화 → 재현 → 수정</code></pre>
+          </div>
+
+          <ol>
+            <li><strong>대상을 좁힌다.</strong> 파일 파서, 디코더, 프로토콜 메시지 처리 함수처럼 입력 경계가 뚜렷한 코드를 고른다.</li>
+            <li><strong>하네스를 만든다.</strong> 바이트 배열을 실제 API 호출로 연결하고, 한 입력의 실행이 빠르고 결정적이도록 상태를 정리한다.</li>
+            <li><strong>계측한다.</strong> 컴파일러 또는 동적 바이너리 계측으로 어떤 분기와 에지를 실행했는지 관찰한다.</li>
+            <li><strong>시드를 준비한다.</strong> 작고 다양한 정상·비정상 샘플을 넣고, 같은 커버리지만 만드는 중복 입력은 줄인다.</li>
+            <li><strong>반복한다.</strong> 퍼저가 입력을 변형해 새 경로를 여는 샘플을 보존하고 다시 변형한다.</li>
+            <li><strong>트리아지한다.</strong> 발견 입력을 최소화하고 중복을 제거한 뒤, 정확한 빌드와 환경에서 재현한다.</li>
+            <li><strong>회귀 테스트로 남긴다.</strong> 수정 후에도 크래시 입력을 테스트에 포함해 같은 버그가 돌아오지 않게 한다.</li>
+          </ol>
+
+          <h2 id="taxonomy">퍼징의 종류 — 하나의 축으로 나누면 헷갈린다</h2>
+          <p>
+            블랙박스·그레이박스·화이트박스, 변이 기반·생성 기반 같은 용어는 서로 대체 관계가 아니다.
+            하나는 내부 정보를 얼마나 쓰는지, 다른 하나는 입력을 어떻게 만드는지 설명한다. 따라서 퍼저를 고를 때는 여러 축을 함께 봐야 한다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="퍼징 분류 기준" tabindex="0">
+            <table class="article-table">
+              <thead>
+                <tr><th>분류 축</th><th>종류</th><th>뜻</th><th>장단점</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>내부 정보</td><td>블랙박스</td><td>입출력과 충돌처럼 외부 현상만 본다.</td><td>적용은 쉽지만 깊은 경로를 찾기 어렵다.</td></tr>
+                <tr><td>내부 정보</td><td>그레이박스</td><td>커버리지 같은 가벼운 실행 피드백을 사용한다.</td><td>속도와 탐색 능력의 균형이 좋아 가장 널리 쓰인다.</td></tr>
+                <tr><td>내부 정보</td><td>화이트박스</td><td>기호 실행·제약 해결 등 프로그램 의미를 깊게 분석한다.</td><td>어려운 조건을 풀 수 있지만 계산 비용이 크다.</td></tr>
+                <tr><td>입력 생성</td><td>변이 기반</td><td>기존 시드의 비트·바이트·블록을 바꾸거나 결합한다.</td><td>설정은 쉽지만 강한 문법 검증 앞에서 막힐 수 있다.</td></tr>
+                <tr><td>입력 생성</td><td>생성 기반</td><td>문법·모델·AST에 따라 처음부터 유효한 입력을 만든다.</td><td>깊은 파싱 단계에 도달하지만 모델 작성 비용이 든다.</td></tr>
+                <tr><td>입력 생성</td><td>구조 인식·혼합</td><td>구조를 보존한 변이와 일반 변이를 함께 사용한다.</td><td>유효성과 예상 밖 입력의 균형을 잡는다.</td></tr>
+                <tr><td>실행 모델</td><td>프로세스 밖</td><td>각 입력을 새 프로세스·forkserver·별도 대상에 전달한다.</td><td>격리는 강하지만 시작 비용이 생긴다.</td></tr>
+                <tr><td>실행 모델</td><td>인프로세스</td><td>퍼저와 대상 라이브러리를 한 프로세스에서 반복 호출한다.</td><td>매우 빠르지만 전역 상태 초기화와 결정성이 중요하다.</td></tr>
+                <tr><td>대상 형태</td><td>파일·API·프로토콜·상태 기반</td><td>단일 입력인지, 요청 순서와 세션 상태까지 다루는지 구분한다.</td><td>네트워크 프로토콜은 메시지뿐 아니라 상태 전이도 탐색해야 한다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note-box">
+            <strong>TERMINOLOGY TRAP</strong>
+            <p>
+              “소스 없는 바이너리”와 “피드백 없는 블랙박스”는 같지 않다. Jackalope처럼 소스가 없어도 TinyInst로 바이너리를 동적 계측해
+              커버리지를 얻는 퍼저가 있다. 소스 접근성, 계측 방식, 피드백 수준은 따로 확인해야 한다.
+            </p>
+          </div>
+
+          <h2 id="vocabulary">퍼징을 이해하기 위한 핵심 용어</h2>
+
+          <h3>코퍼스와 시드</h3>
+          <p>
+            코퍼스는 퍼저가 재료로 사용하는 입력 집합이고, 시드는 시작할 때 넣는 초기 입력이다. 좋은 코퍼스는 파일 수가 많은 것이 아니라
+            <strong>작은 입력으로 서로 다른 동작을 많이 일으키는 집합</strong>이다. 새 커버리지를 만들지 않는 중복 샘플은 실행 시간만 차지한다.
+          </p>
+
+          <h3>하네스</h3>
+          <p>
+            하네스는 퍼저의 바이트 입력을 테스트 대상 API에 연결하는 얇은 코드다. 같은 퍼저라도 하네스가 느리거나 너무 넓으면 초당 실행 수가 줄고,
+            입력이 중요한 로직까지 도달하지 못한다. libFuzzer 계열의 가장 단순한 형태는 다음과 같다.
+          </p>
+          <div class="code-block" aria-label="libFuzzer 하네스 예시">
+            <div class="code-title"><span>MINIMAL HARNESS</span><span>C++</span></div>
+            <pre><code>#include &lt;cstddef&gt;
+#include &lt;cstdint&gt;
+
+extern "C" int LLVMFuzzerTestOneInput(
+    const uint8_t* data, size_t size) {
+  if (size &gt; 1'000'000) return 0;
+  parse_untrusted_document(data, size);
+  return 0;
+}</code></pre>
+          </div>
+
+          <h3>계측과 커버리지</h3>
+          <p>
+            계측은 실행 중 어떤 코드가 지나갔는지 알기 위한 관찰 장치를 넣는 일이다. 소스 빌드 시 컴파일러가 넣을 수도 있고,
+            QEMU·Frida·TinyInst 같은 도구가 바이너리 실행 중 넣을 수도 있다. 라인 수 자체보다 새로운 에지와 분기처럼
+            <strong>행동이 달라졌음을 알려 주는 신호</strong>가 중요하다.
+          </p>
+
+          <h3>오라클과 sanitizer</h3>
+          <p>
+            오라클은 무엇을 실패로 볼지 정하는 규칙이다. 크래시와 타임아웃은 기본 오라클이고, assertion·두 구현의 결과 차이·프로토콜 불변식도 사용할 수 있다.
+            ASan·UBSan·MSan은 조용히 지나갈 메모리 오류와 정의되지 않은 동작을 즉시 실패로 바꿔 퍼저가 저장할 수 있게 한다.
+          </p>
+
+          <h2 id="comparison">대표 퍼저 8종 비교</h2>
+          <p>
+            “어떤 퍼저가 가장 좋은가”보다 “내 대상과 제약에 어떤 퍼저가 맞는가”가 정확한 질문이다.
+            아래 표는 각 프로젝트의 공식 문서를 기준으로 같은 질문을 던져 정리한 것이다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="대표 퍼저 비교" tabindex="0">
+            <table class="article-table">
+              <thead>
+                <tr><th>퍼저</th><th>주 대상</th><th>실행·피드백</th><th>소스·계측 조건</th><th>잘 맞는 상황</th><th>주의점</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>AFL++</td><td>C/C++·바이너리</td><td>주로 프로세스 밖, 에지 커버리지, forkserver·persistent</td><td>소스 계측 또는 QEMU·Frida 등 바이너리 계측</td><td>범용 캠페인, 다양한 계측 백엔드와 변이 전략</td><td>모드가 많아 대상에 맞는 설정과 성능 측정이 필요하다.</td></tr>
+                <tr><td>libFuzzer</td><td>C/C++ 라이브러리</td><td>인프로세스, LLVM SanitizerCoverage</td><td>Clang으로 대상과 하네스를 계측·링크할 수 있어야 함</td><td>좁은 API와 빠른 하네스, sanitizer 결합</td><td>대상 상태를 매 반복마다 깨끗이 되돌려야 한다.</td></tr>
+                <tr><td>Jackalope</td><td>폐쇄형 바이너리</td><td>TinyInst 기반 커버리지, 분산 실행</td><td>소스 불필요, TinyInst 동적 계측</td><td>Windows·macOS 등 소스 없는 바이너리와 사용자 정의 전달 방식</td><td>기본 변이는 단순해 대상별 mutator 작성이 중요하다.</td></tr>
+                <tr><td>Honggfuzz</td><td>네이티브 프로그램</td><td>SW/HW 커버리지, 멀티프로세스·persistent</td><td>컴파일러 계측 또는 지원되는 HW·바이너리 피드백</td><td>간결한 범용 실행과 강한 크래시 감시</td><td>계측·플랫폼별 기능 차이를 확인해야 한다.</td></tr>
+                <tr><td>LibAFL</td><td>맞춤형 퍼저</td><td>구성 요소를 조립하는 Rust 프레임워크</td><td>대상에 따라 SanitizerCoverage·Frida·QEMU·TinyInst 선택</td><td>임베디드·하이퍼바이저·특수 입력 등 연구와 커스텀 환경</td><td>완성형 CLI보다 설계·구현 비용이 크다.</td></tr>
+                <tr><td>Jazzer</td><td>Java·Kotlin·JVM</td><td>인프로세스, 커버리지 기반, libFuzzer 계열</td><td>대상 JVM 바이트코드와 fuzz test 필요</td><td>JUnit과 함께 JVM 애플리케이션을 퍼징할 때</td><td>네이티브 메모리 버그보다 JVM용 bug detector와 예외 설계가 핵심이다.</td></tr>
+                <tr><td>Atheris</td><td>Python·CPython 확장</td><td>Python 바이트코드 계측, libFuzzer 기반</td><td>가져올 수 있는 Python 모듈, 네이티브 확장은 별도 계측</td><td>파서·직렬화 코드와 네이티브 확장을 함께 볼 때</td><td>계측되지 않은 Python 코드는 커버리지 피드백을 주지 않는다.</td></tr>
+                <tr><td>Fuzzilli</td><td>JavaScript 엔진</td><td>FuzzIL 프로그램 변이, 커버리지 기반</td><td>대상 엔진의 coverage·REPRL 패치와 빌드 필요</td><td>동적 언어 엔진의 구조 있는 프로그램 생성</td><td>일반 웹앱용 퍼저가 아니며 대상 엔진 통합 비용이 크다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="details">각 퍼저의 차이를 조금 더 자세히</h2>
+
+          <h3>AFL++ — 범용성과 선택지가 강점</h3>
+          <p>
+            AFL++는 AFL에서 출발한 커버리지 기반 진화형 퍼저다. 소스가 있으면 컴파일러 래퍼로 계측하고,
+            바이너리만 있으면 QEMU·Frida·Unicorn 같은 모드를 선택할 수 있다. forkserver는 매 입력마다 프로그램을 처음부터 실행하는 비용을 줄이고,
+            persistent mode는 한 프로세스 안에서 여러 입력을 처리해 더 빠르게 만든다. 다양한 power schedule, dictionary, custom mutator가 있어
+            일반적인 네이티브 대상에서 첫 선택지로 삼기 좋다.
+          </p>
+
+          <h3>libFuzzer — 함수 단위로 매우 빠르게</h3>
+          <p>
+            libFuzzer는 대상 라이브러리와 같은 프로세스에 링크되는 LLVM의 커버리지 기반 엔진이다.
+            <code>LLVMFuzzerTestOneInput</code> 함수를 반복 호출하므로 프로세스 시작 비용이 거의 없고 ASan·UBSan과 결합하기 쉽다.
+            반면 한 입력이 남긴 전역 상태, 스레드, 캐시가 다음 입력에 영향을 주면 재현성이 떨어진다.
+            LLVM 문서에 따르면 현재 중요한 버그 수정은 계속되지만 원 저자들의 적극적인 기능 개발은 Centipede로 이동했다.
+          </p>
+
+          <h3>Jackalope — 소스 없는 데스크톱 바이너리에 강한 도구</h3>
+          <p>
+            Google Project Zero의 Jackalope는 사용자 정의가 가능한 분산형 커버리지 기반 퍼저다.
+            기본적으로 TinyInst로 바이너리를 계측하며 Windows, macOS, Linux, Android의 블랙박스 바이너리를 지원한다.
+            파일과 공유 메모리 입력 전달, 문법 기반 mutation, 단일·다중 머신 병렬 실행을 제공한다.
+            공식 문서가 밝히듯 고급 mutation 전략이 기본 제공되는 것은 아니므로, 특수 형식에서는 custom mutator가 성능을 좌우한다.
+          </p>
+
+          <h3>Honggfuzz — 실행과 크래시 감시에 집중한 범용 퍼저</h3>
+          <p>
+            Honggfuzz는 소프트웨어·하드웨어 커버리지를 이용하는 피드백 기반 퍼저다. 멀티프로세스·멀티스레드와 persistent mode를 지원하고,
+            낮은 수준의 운영체제 인터페이스로 숨은 충돌을 감시한다. AFL++와 역할이 겹치지만 비교적 직접적인 실행 흐름과
+            강한 프로세스 모니터링을 선호할 때 검토할 수 있다.
+          </p>
+
+          <h3>LibAFL — 퍼저가 아니라 퍼저를 만드는 부품 상자</h3>
+          <p>
+            LibAFL은 Rust로 작성된 모듈형 퍼징 프레임워크다. 입력 표현, 스케줄러, 실행기, 관찰자, 피드백을 교체할 수 있고
+            SanitizerCoverage·Frida·QEMU·TinyInst 백엔드를 제공한다. Windows, macOS, iOS, Linux, Android뿐 아니라
+            <code>no_std</code> 환경까지 겨냥한다. 기존 퍼저의 실행 모델로는 맞지 않는 펌웨어·하이퍼바이저·임베디드 대상을 다룰 때 강력하지만,
+            그만큼 퍼징 시스템 자체를 설계해야 한다.
+          </p>
+
+          <h3>언어·도메인 특화 퍼저 — 런타임의 의미를 활용한다</h3>
+          <p>
+            Jazzer는 JVM 바이트코드와 JUnit 생태계에, Atheris는 Python 바이트코드와 CPython 확장에 맞춰져 있다.
+            Fuzzilli는 단순 바이트가 아니라 자체 중간 표현인 FuzzIL 프로그램을 변형해 JavaScript 엔진이 이해할 수 있는 유효한 코드를 만든다.
+            범용 바이트 변이만으로 통과하기 어려운 언어 문법과 런타임 상태를 아는 것이 특화 퍼저의 장점이다.
+          </p>
+
+          <h2 id="selection">상황별 선택 기준</h2>
+          <ul class="article-checklist">
+            <li><span><strong>C/C++ 소스와 작은 API가 있다:</strong> libFuzzer로 빠른 인프로세스 하네스를 만들고 sanitizer를 붙인다.</span></li>
+            <li><span><strong>전체 실행 파일과 파일 입력을 다룬다:</strong> AFL++ 또는 Honggfuzz로 시작해 실행 속도와 커버리지를 비교한다.</span></li>
+            <li><span><strong>Windows·macOS의 소스 없는 바이너리다:</strong> Jackalope와 TinyInst 조합을 우선 검토한다.</span></li>
+            <li><span><strong>Python 또는 JVM 프로젝트다:</strong> Atheris 또는 Jazzer로 언어 런타임의 커버리지를 직접 사용한다.</span></li>
+            <li><span><strong>JavaScript 엔진 자체가 대상이다:</strong> 구조 있는 프로그램을 생성하는 Fuzzilli가 더 알맞다.</span></li>
+            <li><span><strong>임베디드·펌웨어·특수 피드백이 필요하다:</strong> LibAFL로 입력·실행기·관찰자를 조합한다.</span></li>
+            <li><span><strong>복잡한 파일 형식이다:</strong> dictionary, grammar, structure-aware custom mutator를 추가한다.</span></li>
+            <li><span><strong>상태 기반 네트워크 프로토콜이다:</strong> 단일 패킷뿐 아니라 메시지 순서와 상태 전이를 모델링하는 퍼저가 필요하다.</span></li>
+          </ul>
+
+          <p>
+            실제로는 하나만 고집할 필요가 없다. 같은 하네스를 AFL++와 libFuzzer에서 돌려 결과를 교환하거나,
+            서로 다른 퍼저의 코퍼스를 주기적으로 합치는 방식은 탐색 편향을 줄인다. 중요한 지표도 단순한 초당 실행 수 하나가 아니다.
+            시간당 새 에지, 안정성, 중복 제거 후 고유 충돌, 재현율을 함께 봐야 한다.
+          </p>
+
+          <h2 id="limits">퍼징이 놓치는 것과 안전한 운영</h2>
+          <h3>도달하지 못하면 찾지 못한다</h3>
+          <p>
+            체크섬, 암호, 압축, 긴 상태 전이처럼 입력과 분기 조건 사이의 관계가 복잡하면 무작위 변이만으로 통과하기 어렵다.
+            좋은 시드, dictionary, 비교 로깅, 문법 기반 변이, concolic execution 같은 보조 기법이 필요한 이유다.
+          </p>
+
+          <h3>오라클이 없으면 논리 버그는 조용히 지나간다</h3>
+          <p>
+            권한이 잘못 부여되거나 계산 결과가 미세하게 틀려도 프로그램이 죽지 않을 수 있다. “절대 음수가 될 수 없다” 같은 불변식을 assertion으로 만들거나,
+            두 구현의 결과를 비교하는 differential testing을 사용해야 이런 버그를 포착할 수 있다.
+          </p>
+
+          <h3>퍼징 자체도 격리해야 한다</h3>
+          <p>
+            퍼저는 의도적으로 비정상 동작을 유발하며 CPU·메모리·디스크를 오래 사용한다. AFL++ 문서도 데이터 손실을 감수할 수 없는 시스템에서 실행하지 말라고 경고한다.
+            대상이 파일 삭제, 네트워크 요청, 장치 제어 같은 부작용을 일으킬 수 있다면 VM·컨테이너·최소 권한 계정에서 외부 네트워크와 실제 자원을 차단해야 한다.
+            내가 소유하거나 테스트 권한을 받은 대상에서만 실행하는 것도 기본 조건이다.
+          </p>
+
+          <div class="note-box">
+            <strong>CAMPAIGN CHECKLIST</strong>
+            <p>
+              범위를 허가받았는가 → 하네스가 빠르고 결정적인가 → sanitizer와 오라클이 있는가 → 코퍼스가 작고 다양한가 →
+              실행 환경이 격리됐는가 → 크래시를 최소화·중복 제거·재현했는가 → 수정 입력을 회귀 테스트로 남겼는가.
+            </p>
+          </div>
+
+          <h2 id="lesson">정리 — 좋은 퍼저보다 좋은 퍼징 캠페인</h2>
+          <p>
+            이번 학습을 통해 퍼징은 운에 맡기는 무작위 테스트가 아니라 <strong>피드백으로 입력 공간을 탐색하는 자동화된 실험</strong>이라는 점을 이해했다.
+            AFL++와 libFuzzer의 핵심 차이는 단순한 성능 순위가 아니라 실행 모델과 하네스의 경계에 있고,
+            Jackalope의 강점은 소스 없는 바이너리에서도 동적 계측으로 커버리지를 얻는 데 있다.
+            LibAFL은 완제품이 아닌 조립식 프레임워크이며 Jazzer·Atheris·Fuzzilli는 각 언어와 런타임의 구조를 활용한다.
+          </p>
+          <p>
+            결국 발견 성과를 좌우하는 것은 도구 이름 하나가 아니다. 적절히 좁힌 대상, 빠르고 결정적인 하네스, 의미 있는 시드,
+            커버리지 피드백, 강한 오라클, sanitizer, 그리고 발견 이후의 재현과 회귀 테스트가 한 흐름으로 이어져야 한다.
+            다음 실습에서는 작은 오픈소스 파서를 대상으로 같은 하네스를 libFuzzer와 AFL++에서 실행해
+            실행 속도·커버리지·코퍼스 증가를 직접 비교해 볼 계획이다.
+          </p>
+
+          <h3>공식 참고 자료</h3>
+          <ul>
+            <li><a href="https://aflplus.plus/docs/fuzzing_in_depth/" target="_blank" rel="noreferrer">AFL++ — Fuzzing in Depth</a></li>
+            <li><a href="https://aflplus.plus/docs/technical_details/" target="_blank" rel="noreferrer">AFL++ — Technical Details</a></li>
+            <li><a href="https://llvm.org/docs/LibFuzzer.html" target="_blank" rel="noreferrer">LLVM — libFuzzer documentation</a></li>
+            <li><a href="https://github.com/googleprojectzero/Jackalope" target="_blank" rel="noreferrer">Google Project Zero — Jackalope</a></li>
+            <li><a href="https://github.com/google/honggfuzz" target="_blank" rel="noreferrer">Google — Honggfuzz</a></li>
+            <li><a href="https://github.com/AFLplusplus/LibAFL" target="_blank" rel="noreferrer">AFLplusplus — LibAFL</a></li>
+            <li><a href="https://github.com/CodeIntelligenceTesting/jazzer" target="_blank" rel="noreferrer">Code Intelligence — Jazzer</a></li>
+            <li><a href="https://github.com/google/atheris" target="_blank" rel="noreferrer">Google — Atheris</a></li>
+            <li><a href="https://github.com/googleprojectzero/fuzzilli" target="_blank" rel="noreferrer">Google Project Zero — Fuzzilli</a></li>
+            <li><a href="https://google.github.io/oss-fuzz/" target="_blank" rel="noreferrer">Google — OSS-Fuzz documentation</a></li>
+            <li><a href="https://github.com/google/fuzzing" target="_blank" rel="noreferrer">Google Fuzzing resources</a> — 2025년 12월부터 읽기 전용 아카이브</li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_004 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>

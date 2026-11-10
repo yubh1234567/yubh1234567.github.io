@@ -15,6 +15,15 @@ const categories = [
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
   {
+    category: "bug-bounty",
+    date: "2026.11.10",
+    title: "무작위 입력은 어떻게 취약점을 찾는가",
+    summary: "퍼징의 동작 원리와 분류 기준, AFL++부터 Fuzzilli까지 대표 퍼저 8종의 차이와 선택법.",
+    tags: ["Fuzzing", "Fuzzer", "Bug Bounty"],
+    url: "posts/fuzzer-and-fuzzing.html",
+    draft: false,
+  },
+  {
     category: "research",
     date: "2026.11.10",
     title: "차량의 안드로이드가 해킹당해도, 제어권은 지킬 수 있을까",
