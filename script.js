@@ -26,7 +26,7 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.18",
-    title: "차를 빌리려고 맡긴 내 정보가 유출됐다",
+    title: "쏘카 개인정보 유출 사건",
     summary: "쏘카의 내부용 회원 조회 기능에 대한 외부 공격으로 고객 248명의 정보가 유출됐다. 사고의 흐름과 접근 권한, 대응과 남은 과제를 쉽게 살펴본다.",
     tags: ["보안 사고", "차량 보안", "개인정보"],
     url: "posts/socar-member-data-breach.html",
