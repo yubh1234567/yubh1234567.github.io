@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="OWASP Top 10:2025 전체 항목과 A04 암호 체계 실패를 인코딩, 암호화, 해시, 비밀번호 저장, TLS, 키 관리와 보안 난수 중심으로 쉽게 설명합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>암호화만 하면 안전할까 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-18">2026.11.18</time></p>
+          <h1>암호화만 하면<br /><em>안전할까</em></h1>
+          <p class="article-lede">
+            OWASP Top 10:2025 전체 위험을 먼저 살펴보고, A04 암호 체계 실패를 통해 비밀번호 저장부터
+            HTTPS, 키 관리와 보안 난수까지 데이터 보호의 기본 원리를 정리한다.
+          </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li>암호 체계 실패는 암호화를 하지 않은 경우뿐 아니라 약한 알고리즘, 키 유출, 예측 가능한 난수와 잘못된 사용법까지 포함한다.</li>
+              <li>Base64는 암호화가 아니며, 비밀번호에는 빠른 일반 해시가 아니라 salt와 비용 계수를 갖춘 전용 비밀번호 해시가 필요하다.</li>
+              <li>HTTPS는 전송 구간을 보호할 뿐이다. 저장 데이터, 서버 권한과 암호 키의 전체 수명주기는 별도로 관리해야 한다.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#top10"><span>01</span>OWASP Top 10</a></li>
+            <li><a href="#definition"><span>02</span>A04의 의미</a></li>
+            <li><a href="#terminology"><span>03</span>암호 용어 구분</a></li>
+            <li><a href="#password"><span>04</span>비밀번호 저장</a></li>
+            <li><a href="#transport"><span>05</span>HTTPS와 TLS</a></li>
+            <li><a href="#keys"><span>06</span>키 관리</a></li>
+            <li><a href="#integrity"><span>07</span>변조 탐지</a></li>
+            <li><a href="#random"><span>08</span>보안 난수</a></li>
+            <li><a href="#prevention"><span>09</span>오해와 예방</a></li>
+            <li><a href="#takeaways"><span>10</span>정리</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>MISSION / OWASP TOP 10:2025</strong>
+            <p>
+              OWASP Top 10의 열 가지 위험을 이해하고, 그중 A04 암호 체계 실패를 공식 자료 다섯 개 이상으로 조사해
+              처음 접하는 사람도 이해할 수 있는 언어로 정리한다. 세부 권고는 2026년 11월 18일 기준으로 확인했다.
+            </p>
+          </div>
+
+          <p>
+            보안에서 <strong>암호화</strong>라는 말을 자주 듣는다. 개인정보를 암호화하고 HTTPS를 적용하면
+            중요한 정보가 모두 안전해질 것처럼 느껴진다. 나도 처음에는 OWASP의 암호 체계 실패를 단순히
+            암호화를 적용하지 않은 문제라고 생각했다.
+          </p>
+          <p>
+            하지만 암호화했는지만큼 어떤 방식으로 했는지, 열쇠를 어디에 보관했는지, 비밀번호를 어떻게 저장했는지,
+            안전한 난수를 사용했는지가 중요하다. 아무리 튼튼한 금고를 사용해도 열쇠를 금고 옆에 붙여 두면 소용이 없다.
+          </p>
+
+          <div class="note-box">
+            <strong>ONE-LINE MODEL</strong>
+            <p>암호 체계 실패는 자물쇠가 없는 문제뿐 아니라 약한 자물쇠, 노출된 열쇠와 잘못된 잠금 방법까지 포함한다.</p>
+          </div>
+
+          <h2 id="top10">OWASP Top 10:2025 한눈에 보기</h2>
+          <p>
+            OWASP Top 10은 정확히 열 개의 해킹 기법을 뽑은 목록이 아니다. 웹 애플리케이션에서 중요하게 관리해야 할
+            보안 문제를 열 개의 <strong>위험 범주</strong>로 묶은 인식 제고용 문서다. 2025판은 280만 개가 넘는
+            애플리케이션의 데이터와 보안 실무자 설문을 함께 반영하므로, 순위가 단순 발생 횟수만을 뜻하지는 않는다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="OWASP Top 10 2025 쉬운 설명" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>순위</th><th>위험</th><th>처음 접하는 사람을 위한 설명</th></tr></thead>
+              <tbody>
+                <tr><td>A01</td><td><a href="https://top10.owasp.org/2025/A01_2025-Broken_Access_Control/" target="_blank" rel="noreferrer">접근 통제 실패</a></td><td>권한이 없는데 다른 사람의 정보나 관리자 기능을 사용할 수 있는 문제다.</td></tr>
+                <tr><td>A02</td><td><a href="https://top10.owasp.org/2025/A02_2025-Security_Misconfiguration/" target="_blank" rel="noreferrer">보안 설정 오류</a></td><td>서버나 클라우드의 안전 기능을 잘못 설정해 공격할 틈을 열어 둔 문제다.</td></tr>
+                <tr><td>A03</td><td><a href="https://top10.owasp.org/2025/A03_2025-Software_Supply_Chain_Failures/" target="_blank" rel="noreferrer">소프트웨어 공급망 실패</a></td><td>외부 부품이나 저장소, 빌드·배포 과정이 오염되거나 제대로 관리되지 않는 문제다.</td></tr>
+                <tr><td>A04</td><td><a href="https://top10.owasp.org/2025/A04_2025-Cryptographic_Failures/" target="_blank" rel="noreferrer">암호 체계 실패</a></td><td>중요한 정보를 제대로 잠그지 않거나 약한 키·알고리즘·난수를 사용하는 문제다.</td></tr>
+                <tr><td>A05</td><td><a href="https://top10.owasp.org/2025/A05_2025-Injection/" target="_blank" rel="noreferrer">인젝션</a></td><td>사용자가 입력한 데이터를 SQL이나 운영체제 명령으로 실행하는 문제다.</td></tr>
+                <tr><td>A06</td><td><a href="https://top10.owasp.org/2025/A06_2025-Insecure_Design/" target="_blank" rel="noreferrer">안전하지 않은 설계</a></td><td>필요한 보안 규칙과 방어 장치를 설계 단계에서 빠뜨린 문제다.</td></tr>
+                <tr><td>A07</td><td><a href="https://top10.owasp.org/2025/A07_2025-Authentication_Failures/" target="_blank" rel="noreferrer">인증 실패</a></td><td>가짜 사용자를 진짜 사용자로 인정하거나 로그인 세션을 잘못 관리하는 문제다.</td></tr>
+                <tr><td>A08</td><td><a href="https://top10.owasp.org/2025/A08_2025-Software_or_Data_Integrity_Failures/" target="_blank" rel="noreferrer">소프트웨어·데이터 무결성 실패</a></td><td>코드, 업데이트와 데이터가 변조되지 않았는지 확인하지 않고 믿는 문제다.</td></tr>
+                <tr><td>A09</td><td><a href="https://top10.owasp.org/2025/A09_2025-Security_Logging_and_Alerting_Failures/" target="_blank" rel="noreferrer">보안 로깅·알림 실패</a></td><td>공격 흔적을 남기지 않거나 기록하고도 담당자에게 제때 알리지 못하는 문제다.</td></tr>
+                <tr><td>A10</td><td><a href="https://top10.owasp.org/2025/A10_2025-Mishandling_of_Exceptional_Conditions/" target="_blank" rel="noreferrer">부적절한 예외 처리</a></td><td>오류나 장애가 발생했을 때 시스템이 안전하지 않은 상태로 동작하는 문제다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            2025판의 선정 과정과 변화는
+            <a href="https://top10.owasp.org/2025/0x00_2025-Introduction/" target="_blank" rel="noreferrer">OWASP 공식 소개</a>에서
+            확인할 수 있다. 이 글에서는 그중 개인정보, 비밀번호, 인증 토큰과 통신을 직접 다루는 A04를 자세히 살펴본다.
+          </p>
+
+          <h2 id="definition">A04 암호 체계 실패란 무엇인가</h2>
+          <p>
+            A04는 2021판의 2위에서 2025판의 4위로 내려왔다. 하지만 순위가 낮아졌다고 중요하지 않은 것은 아니다.
+            개인정보, 카드번호, 건강정보와 영업비밀이 노출되면 개인과 기업 모두 큰 피해를 볼 수 있다.
+          </p>
+          <p>
+            <a href="https://top10.owasp.org/2025/A04_2025-Cryptographic_Failures/" target="_blank" rel="noreferrer">OWASP A04:2025</a>는
+            필요한 암호화를 하지 않은 경우뿐 아니라 오래된 알고리즘, 키 유출과 재사용, 인증서 검증 실패,
+            부적절한 암호 모드, 약한 난수와 잘못된 오류 처리까지 이 범주에 포함한다. 특히 2025판은 예측 가능한 난수와
+            낮은 엔트로피에 관련된 여러 약점을 주요 문제로 언급한다.
+          </p>
+          <ul>
+            <li>비밀번호나 개인정보를 평문으로 저장한다.</li>
+            <li>MD5·SHA-1처럼 새 보안 설계에 부적절한 함수를 계속 사용한다.</li>
+            <li>암호화 키를 소스 코드나 공개 저장소에 넣는다.</li>
+            <li>서버 인증서가 올바른지 확인하지 않거나 오류를 무시한다.</li>
+            <li>시간이나 사용자 번호로 재설정 토큰을 만들어 공격자가 값을 추측할 수 있다.</li>
+            <li>암호화만 적용하고 데이터가 바뀌었는지는 확인하지 않는다.</li>
+          </ul>
+
+          <h2 id="terminology">인코딩·암호화·해시는 무엇이 다른가</h2>
+          <p>
+            암호 체계를 이해하려면 자주 혼동되는 개념부터 구분해야 한다.
+            <a href="https://cheatsheetseries.owasp.org/cheatsheets/Security_Terminology_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP 보안 용어 지침</a>을
+            기준으로 정리하면 다음과 같다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="인코딩 암호화 해시 전자서명 비교" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>개념</th><th>쉬운 비유</th><th>되돌릴 수 있는가</th><th>주된 목적</th></tr></thead>
+              <tbody>
+                <tr><td>인코딩</td><td>내용을 다른 표기법으로 옮김</td><td>공개된 규칙으로 누구나 가능</td><td>저장·전송 형식 변환</td></tr>
+                <tr><td>암호화</td><td>열쇠가 필요한 금고</td><td>올바른 키가 있으면 가능</td><td>내용의 기밀성 보호</td></tr>
+                <tr><td>해시</td><td>데이터의 지문을 만듦</td><td>복호화 기능이 없음</td><td>비교와 변조 확인</td></tr>
+                <tr><td>전자서명</td><td>작성자를 확인하는 위조 방지 도장</td><td>원문 복원과는 다른 개념</td><td>출처와 무결성 확인</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Base64는 암호화가 아니다</h3>
+          <p>
+            Base64는 데이터를 다른 문자 형식으로 표현하는 인코딩이다. 결과가 알아보기 어렵게 생겼어도 규칙이 공개되어 있어
+            누구나 원래 값으로 되돌릴 수 있다. API 키나 비밀번호를 Base64로 바꿔 저장해도 비밀성은 생기지 않는다.
+          </p>
+          <div class="code-block" aria-label="인코딩 암호화 해시의 처리 방향">
+            <div class="code-title"><span>DATA TRANSFORMATION</span><span>ENCODE / ENCRYPT / HASH</span></div>
+            <pre><code>인코딩   hello ── 공개된 규칙 ──→ aGVsbG8= ── 누구나 복원
+
+암호화   평문  ── 키 + 알고리즘 ─→ 암호문   ── 올바른 키로 복호화
+
+해시     입력값 ── 해시 함수 ───→ 고정 길이 값 ── 복호화 기능 없음</code></pre>
+          </div>
+          <p>
+            해시는 원문 복원을 목적으로 하지 않는다. 다만 “해시했다”는 사실만으로 안전한 것은 아니다.
+            파일 비교와 비밀번호 저장은 목적이 다르므로 서로 다른 방식이 필요하다.
+          </p>
+
+          <h2 id="password">비밀번호는 왜 암호화하면 안 될까</h2>
+          <p>
+            서비스는 사용자의 비밀번호 원문을 다시 읽을 필요가 없다. 로그인할 때 입력한 값이 가입 당시 값과 같은지만 확인하면 된다.
+            복호화 가능한 형태로 저장하면 서버의 키가 유출됐을 때 모든 비밀번호가 한꺼번에 드러날 수 있다.
+          </p>
+          <p>
+            따라서 비밀번호는 평문이나 복호화 가능한 암호화 대신 <strong>비밀번호 저장용 해시 함수</strong>로 처리해야 한다.
+            <a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP 비밀번호 저장 지침</a>은
+            새 시스템에서 Argon2id를 우선 권고하고, 사용할 수 없다면 scrypt를 제안한다. bcrypt는 주로 기존 시스템에서 사용하며,
+            FIPS 검증 구현이 필요한 환경에서는 PBKDF2를 고려할 수 있다.
+          </p>
+
+          <h3>SHA-256만 한 번 적용하면 왜 부족한가</h3>
+          <p>
+            SHA-256은 파일 무결성 확인 등 여러 용도에서 사용할 수 있는 해시 함수다. 그러나 계산 속도가 매우 빠르기 때문에
+            비밀번호 저장에 단독으로 사용하면 공격자가 수많은 후보를 빠르게 시험할 수 있다. 비밀번호 저장용 함수는 후보 하나를
+            확인할 때마다 시간과 메모리를 사용하도록 의도적으로 비용을 높인다.
+          </p>
+
+          <h3>Salt는 숨겨야 할 비밀이 아니라 사용자별 고유값이다</h3>
+          <p>
+            Salt는 사용자마다 다르게 생성해 비밀번호와 함께 해시하는 값이다. 두 사용자가 같은 비밀번호를 쓰더라도 서로 다른
+            salt를 적용하면 저장 결과가 달라진다. 공격자가 미리 계산한 해시 목록을 여러 계정에 그대로 적용하기도 어려워진다.
+          </p>
+          <div class="code-block" aria-label="비밀번호 salt와 전용 해시 처리 흐름">
+            <div class="code-title"><span>PASSWORD STORAGE</span><span>SALT + COST</span></div>
+            <pre><code>사용자 A의 비밀번호 + 고유 salt A ─→ 전용 비밀번호 해시 ─→ 결과 A
+사용자 B의 비밀번호 + 고유 salt B ─→ 전용 비밀번호 해시 ─→ 결과 B
+
+같은 비밀번호를 입력해도 salt가 다르면 저장 결과가 달라진다.</code></pre>
+          </div>
+          <p>
+            Salt는 해시와 함께 저장해도 된다. 핵심은 계정마다 고유하고 적절하게 생성되는 것이다. 2025년 7월 최종판인
+            <a href="https://pages.nist.gov/800-63-4/sp800-63b.html" target="_blank" rel="noreferrer">NIST SP 800-63B-4</a>도
+            비밀번호를 salt와 비용 계수를 갖춘 적절한 방식으로 해시하고, 사용한 방식과 비용 정보까지 저장해 앞으로 더 강한
+            설정으로 이전할 수 있도록 요구한다.
+          </p>
+
+          <h2 id="transport">HTTPS를 쓰면 모든 데이터가 안전할까</h2>
+          <p>
+            HTTPS는 HTTP 통신을 TLS로 보호한다. 올바르게 적용하면 통신 내용을 중간에서 읽거나 변경하기 어렵게 만들고,
+            사용자가 정상 서버에 연결했는지 확인하는 데 도움을 준다.
+          </p>
+          <p>
+            그러나 HTTPS는 사용자와 서버 사이의 <strong>전송 구간</strong>을 보호한다. 서버가 개인정보를 평문으로 저장하거나,
+            단말이 이미 감염됐거나, 애플리케이션이 권한 없는 사용자에게 데이터를 반환하는 문제까지 해결하지는 않는다.
+          </p>
+          <div class="code-block" aria-label="TLS가 보호하는 범위">
+            <div class="code-title"><span>TLS PROTECTION SCOPE</span><span>IN TRANSIT</span></div>
+            <pre><code>사용자 단말 ═════ HTTPS / TLS 보호 구간 ═════ 서버
+    │                                         │
+감염된 단말은 별도 문제                 저장 데이터와 서버 권한은 별도 문제</code></pre>
+          </div>
+          <p>
+            TLS 버전도 중요하다. <a href="https://www.rfc-editor.org/rfc/rfc8996.html" target="_blank" rel="noreferrer">RFC 8996</a>은
+            TLS 1.0과 1.1을 공식 폐기했다. 2026년의
+            <a href="https://www.rfc-editor.org/info/rfc9852/" target="_blank" rel="noreferrer">RFC 9852</a>는 새 프로토콜이
+            TLS 1.3을 기본으로 요구하도록 한다. TLS 1.2도 올바르게 설정하면 사용할 수 있지만, 새 설계에서는 TLS 1.3을 우선하고
+            호환성이 필요한 경우의 추가 선택지로 보는 편이 적절하다.
+          </p>
+
+          <h2 id="keys">좋은 알고리즘보다 어려운 키 관리</h2>
+          <p>
+            AES처럼 검증된 알고리즘을 사용했다는 사실만으로 안전이 보장되지는 않는다. 암호화 키를 소스 코드에 직접 넣으면
+            저장소나 빌드 결과물이 노출될 때 키도 함께 유출될 수 있다.
+          </p>
+          <div class="note-box">
+            <strong>KEY MANAGEMENT</strong>
+            <p>암호화된 데이터와 복호화 키를 같은 위치에 두는 것은 잠긴 금고 옆에 열쇠를 붙여 두는 것과 같다.</p>
+          </div>
+          <p>
+            키는 코드와 버전 관리 저장소에서 분리해야 한다. 가능하다면 KMS, HSM 또는 전용 비밀정보 관리 시스템을 사용하고,
+            필요한 서비스에만 최소 권한을 부여한다. 환경 변수도 프로세스 정보, 오류 화면과 CI 로그를 통해 노출될 수 있으므로
+            그 자체를 안전한 금고로 생각해서는 안 된다.
+          </p>
+          <p>
+            <a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final" target="_blank" rel="noreferrer">NIST SP 800-57 Part 1 Rev.5</a>는
+            키를 생성하는 순간부터 저장·배포·사용·교체·폐기하는 전체 수명주기를 관리하도록 안내한다. 유출이 의심되거나
+            알고리즘의 안전성이 달라졌을 때 신속히 교체할 수 있어야 하며, 어떤 데이터가 어떤 키로 보호됐는지도 추적해야 한다.
+          </p>
+          <div class="code-block" aria-label="암호 키 수명주기">
+            <div class="code-title"><span>KEY LIFECYCLE</span><span>MANAGE BEFORE INCIDENT</span></div>
+            <pre><code>안전한 생성 → 제한된 배포 → 보호된 저장 → 최소 권한 사용
+       → 사용 기록·감사 → 교체·취소 → 안전한 폐기</code></pre>
+          </div>
+
+          <h2 id="integrity">암호화했는데도 데이터가 바뀔 수 있다</h2>
+          <p>
+            암호화의 기본 목적은 내용을 보지 못하게 하는 <strong>기밀성</strong>이다. 사용하는 방식에 따라서는 공격자가 내용을
+            읽지 못해도 암호문을 조작할 수 있다. 그래서 가능하면 기밀성과 변조 탐지를 함께 제공하는
+            <strong>인증된 암호화(AEAD)</strong>를 사용해야 한다. 잠긴 봉투에 위조 방지 봉인까지 붙이는 것과 비슷하다.
+          </p>
+          <p>
+            <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP 암호화 저장 지침</a>은
+            GCM과 CCM을 대표적인 인증된 방식으로 안내하며, ECB는 매우 제한적인 상황을 제외하면 사용하지 말라고 권고한다.
+            모드와 nonce 같은 세부 요소를 직접 조립하기보다 검증되고 유지관리되는 고수준 라이브러리를 사용해야 한다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="암호화 적용 단계에서 확인할 질문" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>확인 대상</th><th>질문</th><th>실패했을 때의 문제</th></tr></thead>
+              <tbody>
+                <tr><td>알고리즘</td><td>현재 검증된 표준과 라이브러리를 사용하는가?</td><td>알려진 공격이나 구현 약점에 노출된다.</td></tr>
+                <tr><td>키</td><td>안전하게 생성·저장하고 접근을 제한했는가?</td><td>강한 암호문도 공격자가 복호화할 수 있다.</td></tr>
+                <tr><td>모드</td><td>기밀성과 변조 탐지를 함께 제공하는가?</td><td>공격자가 암호문을 조작해도 알아채지 못한다.</td></tr>
+                <tr><td>nonce·IV</td><td>선택한 방식의 규칙대로 생성하고 재사용을 막는가?</td><td>같은 키 아래 반복 사용 시 보안 성질이 무너질 수 있다.</td></tr>
+                <tr><td>오류 처리</td><td>실패 정보가 공격자에게 단서를 주지 않는가?</td><td>오류 차이를 이용한 공격과 내부정보 노출이 가능하다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="random">게임용 난수와 보안용 난수는 다르다</h2>
+          <p>
+            게임 캐릭터의 행동이나 화면 요소를 섞을 때는 일반 난수 함수로 충분할 수 있다. 하지만 암호화 키, 세션 ID,
+            비밀번호 재설정 링크, CSRF 토큰과 API 키는 다음 값을 공격자가 예측하기 어려워야 한다.
+          </p>
+          <p>
+            사용자 번호와 현재 시간을 조합해 재설정 토큰을 만들면 다른 사용자의 값도 추측할 수 있다. 이런 값에는 일반 난수 생성기가 아닌
+            <strong>암호학적으로 안전한 의사난수 생성기(CSPRNG)</strong>를 사용해야 한다. 직접 알고리즘을 만들기보다 운영체제와
+            언어의 검증된 보안용 API를 사용하는 것이 원칙이다.
+          </p>
+          <div class="code-block" aria-label="일반 난수와 보안 난수의 용도">
+            <div class="code-title"><span>RANDOMNESS</span><span>GENERAL vs SECURITY</span></div>
+            <pre><code>일반 난수  → 화면 효과 · 게임 동작 · 비보안 표본 추출
+CSPRNG     → 암호 키 · 세션 ID · 재설정 토큰 · API 키</code></pre>
+          </div>
+          <p>
+            <a href="https://csrc.nist.gov/pubs/sp/800/90/c/final" target="_blank" rel="noreferrer">NIST SP 800-90C</a>는
+            암호 알고리즘 기반 생성기와 엔트로피 소스를 결합한 고품질 난수 생성기 구성을 다룬다. 애플리케이션 개발자는 이를 직접
+            구현하기보다 플랫폼의 검증된 CSPRNG를 올바르게 호출하는 데 집중해야 한다.
+          </p>
+
+          <h2 id="prevention">자주 하는 오해와 예방 순서</h2>
+          <div class="table-scroll" role="region" aria-label="암호 체계에 대한 오해와 사실" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>오해</th><th>실제로 확인할 내용</th></tr></thead>
+              <tbody>
+                <tr><td>Base64면 암호화됐다</td><td>Base64는 공개된 규칙으로 되돌릴 수 있는 인코딩이다.</td></tr>
+                <tr><td>SHA-256이면 비밀번호도 안전하다</td><td>빠른 일반 해시는 대량 추측에 유리하므로 전용 비밀번호 해시가 필요하다.</td></tr>
+                <tr><td>HTTPS면 서비스 전체가 안전하다</td><td>TLS는 전송 구간을 보호하며 저장 데이터와 서버 권한은 별도로 보호해야 한다.</td></tr>
+                <tr><td>AES를 썼으니 안전하다</td><td>모드, 키, nonce, 변조 탐지와 오류 처리까지 올바르게 사용해야 한다.</td></tr>
+                <tr><td>환경 변수에 넣으면 키가 안전하다</td><td>환경 변수도 로그와 프로세스 정보로 노출될 수 있어 전용 비밀 관리가 필요하다.</td></tr>
+                <tr><td>자체 알고리즘은 구조를 몰라서 안전하다</td><td>널리 검증된 표준과 유지관리되는 라이브러리를 사용해야 한다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>현실적인 예방 순서</h3>
+          <ul class="article-checklist">
+            <li><span><strong>보호할 데이터를 분류한다.</strong> 개인정보, 인증정보와 결제정보가 어디에서 생성·전송·저장되는지 파악한다.</span></li>
+            <li><span><strong>불필요한 민감정보는 저장하지 않는다.</strong> 보관하지 않은 데이터는 저장소 침해 때 함께 유출되지 않는다.</span></li>
+            <li><span><strong>검증된 표준과 라이브러리를 사용한다.</strong> 자체 암호 알고리즘과 직접 조립한 프로토콜을 만들지 않는다.</span></li>
+            <li><span><strong>비밀번호는 전용 해시로 저장한다.</strong> 계정별 salt와 환경에 맞는 비용 설정을 적용한다.</span></li>
+            <li><span><strong>현대적인 TLS를 사용한다.</strong> 인증서 검증을 생략하지 않고 TLS 1.0과 1.1을 비활성화한다.</span></li>
+            <li><span><strong>인증된 암호화를 선택한다.</strong> 저장 데이터의 기밀성과 변조 여부를 함께 보호한다.</span></li>
+            <li><span><strong>키와 토큰은 CSPRNG로 생성한다.</strong> 시간값과 일반 난수를 보안용 비밀 생성에 사용하지 않는다.</span></li>
+            <li><span><strong>키를 데이터와 코드에서 분리한다.</strong> 전용 비밀 관리 시스템과 최소 권한을 적용한다.</span></li>
+            <li><span><strong>교체와 복구를 미리 시험한다.</strong> 키 유출 뒤 처음 절차를 고민하지 않도록 수명주기를 준비한다.</span></li>
+            <li><span><strong>로그를 점검한다.</strong> 비밀번호, 키, 토큰과 평문 개인정보가 오류 메시지에 남지 않게 한다.</span></li>
+          </ul>
+
+          <h2 id="takeaways">정리 — 암호화는 기능이 아니라 운영 체계다</h2>
+          <p>
+            이번 조사를 통해 암호 체계 실패는 단순히 암호화를 하지 않은 문제만을 뜻하지 않는다는 점을 알게 됐다.
+            검증된 알고리즘도 키를 코드에 넣거나 비밀번호에 빠른 일반 해시를 사용하고, 예측 가능한 난수로 토큰을 만들면
+            보호 기능을 잃는다. HTTPS 역시 통신 구간을 보호할 뿐 시스템 전체를 자동으로 안전하게 만들지는 않는다.
+          </p>
+          <p>
+            중요한 것은 어려운 암호 알고리즘을 직접 만드는 일이 아니다. 무엇을 보호해야 하는지 파악하고 목적에 맞는 검증된 기술을
+            사용하며, 키와 비밀정보가 만들어져 폐기될 때까지의 과정을 관리해야 한다. 암호화는 보안을 완성하는 마법의 버튼이 아니라
+            올바르게 사용하고 계속 관리해야 하는 도구다.
+          </p>
+
+          <h3>공식 참고 자료</h3>
+          <ul>
+            <li><a href="https://top10.owasp.org/2025/" target="_blank" rel="noreferrer">OWASP Top 10:2025 전체 목록</a></li>
+            <li><a href="https://top10.owasp.org/2025/0x00_2025-Introduction/" target="_blank" rel="noreferrer">OWASP Top 10:2025 소개와 방법론</a></li>
+            <li><a href="https://top10.owasp.org/2025/A04_2025-Cryptographic_Failures/" target="_blank" rel="noreferrer">OWASP A04:2025 — Cryptographic Failures</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Security_Terminology_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Security Terminology Cheat Sheet</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Cryptographic Storage Cheat Sheet</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Password Storage Cheat Sheet</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Transport Layer Security Cheat Sheet</a></li>
+            <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html" target="_blank" rel="noreferrer">OWASP Secrets Management Cheat Sheet</a></li>
+            <li><a href="https://csrc.nist.gov/pubs/sp/800/63/B/4/final" target="_blank" rel="noreferrer">NIST SP 800-63B-4 — Authentication and Authenticator Management</a></li>
+            <li><a href="https://csrc.nist.gov/pubs/sp/800/57/pt1/r5/final" target="_blank" rel="noreferrer">NIST SP 800-57 Part 1 Rev.5 — Key Management</a></li>
+            <li><a href="https://csrc.nist.gov/pubs/sp/800/90/c/final" target="_blank" rel="noreferrer">NIST SP 800-90C — Random Bit Generator Constructions</a></li>
+            <li><a href="https://www.rfc-editor.org/rfc/rfc8996.html" target="_blank" rel="noreferrer">IETF RFC 8996 — Deprecating TLS 1.0 and TLS 1.1</a></li>
+            <li><a href="https://www.rfc-editor.org/info/rfc9852/" target="_blank" rel="noreferrer">IETF RFC 9852 — New Protocols Using TLS Must Require TLS 1.3</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_009 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
