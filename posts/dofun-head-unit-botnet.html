@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../styles.css" />
-    <link rel="stylesheet" href="../post.css?v=20261118-1" />
+    <link rel="stylesheet" href="../post.css?v=20261118-2" />
     <script src="../post.js" defer></script>
   </head>
   <body class="post-page">
@@ -36,22 +36,22 @@
 
     <main id="article">
       <section class="article-hero section-shell">
-        <div class="article-signal" aria-hidden="true">
-          <span>HEAD UNIT</span><i></i><span>BOTNET</span><i></i><span>LOG_006</span>
-        </div>
         <div class="article-heading">
-          <span class="article-category">SESSION_006 / VEHICLE SECURITY · CASE 02</span>
+          <p class="article-date"><time datetime="2026-11-10">2026.11.10</time></p>
           <h1>DoFun 차량용 안드로이드<br /><em>악성코드 감염 사건</em></h1>
           <p class="article-lede">
             차 안에서 길 안내와 음악 재생을 맡는 안드로이드 기기에 악성코드가 들어갔다. 설치를 맡은 앱은 기기에 원래 들어 있던 정상 업데이트 앱이었다. 감염된 기기는 차주 몰래 웹사이트에 접속하고 공격자가 보낸 추가
             프로그램을 실행했다. 2026년 공개된 DoFun 사고를 통해 업데이트 권한이 어떻게 악용됐고 무엇을 확인해야 하는지 살펴본다.
           </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li>DoFun 소프트웨어를 쓰는 일부 차량용 안드로이드 기기에 정상 업데이트 앱을 거쳐 악성코드가 설치됐다.</li>
+              <li>감염된 기기는 차주 몰래 공격자의 인터넷 요청을 대신 보내고 추가 프로그램을 실행하는 데 쓰였다.</li>
+              <li>업데이트 파일을 누가 승인하고 기기가 무엇을 검사하는지, 감염된 기기를 어떻게 복구할지 살펴본다.</li>
+            </ul>
+          </aside>
         </div>
-        <dl class="article-meta" aria-label="글 정보">
-          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
-          <div><dt>NODE</dt><dd>IVI Supply Chain</dd></div>
-          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
-        </dl>
       </section>
 
       <div class="article-layout section-shell">
@@ -88,14 +88,6 @@
             공격자는 여러 감염 기기를 묶어 원격으로 지시한다. 이런 네트워크를 <strong>봇넷</strong>이라고 한다. 이번 악성코드에는 다른 사람의 인터넷 요청을 중계하는 <strong>프록시</strong> 기능도
             있었다. 예를 들어 공격자의 접속 요청이 감염 기기를 거쳐 웹사이트에 도착하면, 웹사이트에는 그 기기가 쓰는 인터넷 주소인 공인 IP가 보인다. 기기의 데이터 회선과 처리 능력도 이 과정에 사용된다.
           </p>
-          <div class="note-box">
-            <strong>이 사고가 중요한 이유</strong>
-            <p>
-              기기에 미리 설치된 업데이트 앱이 악성코드의 유입 통로가 됐다.
-              소프트웨어를 갱신할 권한을 맡길 때는 어떤 파일을 설치하도록 허용할지까지 정해야 한다.
-              이 권한이 악용되면 운전자가 사용하는 기기가 공격자의 통신 도구로 바뀔 수 있다.
-            </p>
-          </div>
 
           <h2 id="root-cause">왜 감염됐나 — 업데이트 앱이 새 앱도 설치할 수 있었다</h2>
           <p>

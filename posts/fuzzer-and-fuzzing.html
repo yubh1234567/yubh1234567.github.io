@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../styles.css" />
-    <link rel="stylesheet" href="../post.css?v=20261118-1" />
+    <link rel="stylesheet" href="../post.css?v=20261118-2" />
     <script src="../post.js" defer></script>
   </head>
   <body class="post-page">
@@ -36,22 +36,22 @@
 
     <main id="article">
       <section class="article-hero section-shell">
-        <div class="article-signal" aria-hidden="true">
-          <span>FUZZING</span><i></i><span>FEEDBACK</span><i></i><span>LOG_004</span>
-        </div>
         <div class="article-heading">
-          <span class="article-category">SESSION_004 / BUG BOUNTY · DOCUMENTATION</span>
+          <p class="article-date"><time datetime="2026-11-10">2026.11.10</time></p>
           <h1>무작위 입력은 어떻게<br /><em>취약점을 찾아내는가</em></h1>
           <p class="article-lede">
             퍼징의 기본 원리부터 입력 생성·피드백·실행 모델에 따른 분류까지,
             대표 퍼저 8종을 같은 기준 위에 놓고 비교.
           </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li>퍼징은 다양한 입력을 자동으로 만들어 프로그램에 반복해서 넣고, 충돌이나 멈춤처럼 예상 밖의 동작을 찾는 테스트다.</li>
+              <li>실행 경로를 관찰하는 퍼저는 새 동작을 만든 입력을 남겨 다시 변형하고, 발견한 오류를 재현할 자료를 모은다.</li>
+              <li>대표 퍼저 8종을 실행 방식과 지원 언어, 소스 코드 유무로 비교해 테스트 대상에 맞는 도구를 고르는 기준을 정리한다.</li>
+            </ul>
+          </aside>
         </div>
-        <dl class="article-meta" aria-label="글 정보">
-          <div><dt>DATE</dt><dd><time datetime="2026-11-10">2026.11.10</time></dd></div>
-          <div><dt>NODE</dt><dd>Bug Bounty</dd></div>
-          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
-        </dl>
       </section>
 
       <div class="article-layout section-shell">

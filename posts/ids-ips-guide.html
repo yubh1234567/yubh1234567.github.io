@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../styles.css" />
-    <link rel="stylesheet" href="../post.css?v=20261118-1" />
+    <link rel="stylesheet" href="../post.css?v=20261118-2" />
     <script src="../post.js" defer></script>
   </head>
   <body class="post-page">
@@ -36,22 +36,22 @@
 
     <main id="article">
       <section class="article-hero section-shell">
-        <div class="article-signal" aria-hidden="true">
-          <span>DETECT</span><i></i><span>PREVENT</span><i></i><span>LOG_008</span>
-        </div>
         <div class="article-heading">
-          <span class="article-category">SESSION_008 / NETWORK SECURITY · DOCUMENTATION</span>
+          <p class="article-date"><time datetime="2026-11-18">2026.11.18</time></p>
           <h1>IDS와 IPS는 공격을 어떻게<br /><em>찾아내고 막는가</em></h1>
           <p class="article-lede">
             패킷과 시스템 이벤트를 수집한 뒤 공격 징후를 판정하고 경보 또는 차단으로 연결하기까지,
             IDS와 IPS의 원리·유형·차이와 안전한 운영 방법을 한 흐름으로 정리한다.
           </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li>IDS는 수상한 활동을 찾아 경보와 기록을 남기고, IPS는 탐지 결과에 따라 통신이나 프로그램의 동작을 차단한다.</li>
+              <li>정상 활동을 공격으로 잘못 판단하면 IPS가 서비스를 끊을 수 있어, 규칙을 충분히 시험하고 적용 범위를 조정해야 한다.</li>
+              <li>탐지 방식과 장비 배치, 암호화된 통신의 사각지대를 살펴보고 탐지에서 안전한 차단으로 옮겨 가는 운영 순서를 정리한다.</li>
+            </ul>
+          </aside>
         </div>
-        <dl class="article-meta" aria-label="글 정보">
-          <div><dt>DATE</dt><dd><time datetime="2026-11-18">2026.11.18</time></dd></div>
-          <div><dt>NODE</dt><dd>Network Security</dd></div>
-          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
-        </dl>
       </section>
 
       <div class="article-layout section-shell">
