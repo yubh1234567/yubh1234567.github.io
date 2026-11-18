@@ -302,7 +302,19 @@
 
           <h2 id="practice">Snort 3 규칙으로 보는 IDS와 IPS</h2>
           <p>
-            다음은 외부에서 내부 웹 서버의 특정 백업 경로를 요청하면 경보를 내는 교육용 예시다.
+            이 절은 Snort 규칙 문법을 외우기 위한 내용이 아니다. 같은 탐지 조건이라도 <code>alert</code>를 사용하면
+            경보만 남기는 IDS가 되고, <code>drop</code>을 사용하면 해당 통신을 차단하는 IPS가 된다는 차이를 보여 주기 위한 예시다.
+            실제 환경에서는 먼저 <code>alert</code>로 오탐 여부를 확인한 뒤, 충분히 검증된 규칙만 <code>drop</code>으로 전환해야 한다.
+          </p>
+          <div class="note-box">
+            <strong>WHY THIS RULE?</strong>
+            <p>
+              같은 공격 징후를 찾더라도 <code>alert</code>는 “발견하고 알리는 것”, <code>drop</code>은 “발견하고 막는 것”이다.
+              이 한 단어의 차이가 IDS와 IPS의 역할 차이를 가장 간단하게 보여 준다.
+            </p>
+          </div>
+          <p>
+            아래 규칙은 외부에서 내부 웹 서버의 특정 백업 경로를 요청하면 경보를 내는 교육용 예시다.
             경로 문자열 하나만으로 악성을 확정할 수 없으므로 실제 환경에서는 자산, 인증, 응답 코드와 요청 빈도 같은 조건을 더해야 한다.
           </p>
           <div class="code-block" aria-label="Snort 3 경보 규칙 예시">
@@ -316,6 +328,11 @@
     rev:1;
 )</code></pre>
           </div>
+          <ul>
+            <li><strong><code>alert</code>:</strong> 요청을 통과시키고 경보만 기록하므로 IDS처럼 동작한다.</li>
+            <li><strong><code>drop</code>:</strong> 인라인 환경에서 요청을 차단하므로 IPS처럼 동작한다.</li>
+            <li><strong>주의:</strong> <code>/admin/backup.zip</code> 요청 자체가 반드시 공격이라는 뜻은 아니다.</li>
+          </ul>
           <p>
             헤더는 동작, 프로토콜, 주소, 포트와 방향을 정하고 본문은 일치 조건과 메시지를 정의한다.
             충분히 검증한 뒤 첫 단어를 <code>drop</code>으로 바꾸면 <strong>인라인 또는 active DAQ로 구성된 환경에서</strong>
