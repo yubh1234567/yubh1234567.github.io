@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="IDS와 IPS의 동작 원리, 탐지 방식, 유형, 차이, 장단점과 실제 구축·운영 방법을 공식 자료를 바탕으로 정리합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>IDS와 IPS는 공격을 어떻게 찾아내고 막는가 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-2" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>DETECT</span><i></i><span>PREVENT</span><i></i><span>LOG_008</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_008 / NETWORK SECURITY · DOCUMENTATION</span>
+          <h1>IDS와 IPS는 공격을 어떻게<br /><em>찾아내고 막는가</em></h1>
+          <p class="article-lede">
+            패킷과 시스템 이벤트를 수집한 뒤 공격 징후를 판정하고 경보 또는 차단으로 연결하기까지,
+            IDS와 IPS의 원리·유형·차이와 안전한 운영 방법을 한 흐름으로 정리한다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-18">2026.11.18</time></dd></div>
+          <div><dt>READ</dt><dd>16 MIN</dd></div>
+          <div><dt>NODE</dt><dd>Network Security</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#definition"><span>01</span>IDS와 IPS의 정의</a></li>
+            <li><a href="#difference"><span>02</span>핵심 차이</a></li>
+            <li><a href="#workflow"><span>03</span>동작 원리</a></li>
+            <li><a href="#detection"><span>04</span>탐지 방식</a></li>
+            <li><a href="#types"><span>05</span>유형과 배치</a></li>
+            <li><a href="#limits"><span>06</span>장단점과 한계</a></li>
+            <li><a href="#deployment"><span>07</span>구축과 운영</a></li>
+            <li><a href="#practice"><span>08</span>규칙 실습</a></li>
+            <li><a href="#ecosystem"><span>09</span>관련 기술</a></li>
+            <li><a href="#takeaways"><span>10</span>정리</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>MISSION / IDS · IPS</strong>
+            <p>
+              목표는 침입 탐지 및 방지 시스템의 동작 원리, 유형, 활용 방법, 장단점과 차이를 이해하는 것이다.
+              기본 개념은 NIST SP 800-94를 따르고, 현재 도구의 동작은 Snort 3·Suricata·Zeek 공식 문서로 보완했다.
+              NIST SP 800-94는 2007년 최종본이며 2012년 개정 초안은 2022년에 폐기되었으므로,
+              제품별 세부 기능은 최신 공식 문서와 함께 확인해야 한다.
+            </p>
+          </div>
+
+          <p>
+            보안 장비가 공격을 발견했다고 해서 항상 패킷을 막는 것은 아니다. 어떤 장비는 수상한 활동을 기록해 분석가에게 알리고,
+            어떤 장비는 통신 경로에서 바로 패킷을 버린다. 앞의 역할이 <strong>IDS</strong>, 뒤의 역할이
+            <strong>IPS</strong>의 중심이다. 둘은 같은 탐지 엔진과 규칙을 공유하기도 하지만, 오탐이 발생했을 때의 결과는 전혀 다르다.
+          </p>
+
+          <div class="note-box">
+            <strong>ONE-LINE MODEL</strong>
+            <p>IDS는 관제의 눈이고, IPS는 통신 경로의 자동 제동장치다. 제동장치는 탐지 정확도와 복구 절차가 준비된 곳에서만 켜야 한다.</p>
+          </div>
+
+          <h2 id="definition">IDS와 IPS란 무엇인가</h2>
+          <h3>IDS — 의심스러운 활동을 찾아 알린다</h3>
+          <p>
+            IDS(Intrusion Detection System)는 네트워크나 시스템에서 발생하는 이벤트를 수집·분석해 무단 접근,
+            악성 행위, 보안 정책 위반의 징후를 찾고 실시간 또는 준실시간으로 경고하는 시스템이다.
+            전형적인 결과는 <strong>경보와 로그</strong>다. 네트워크 트래픽의 복사본을 보는 NIDS뿐 아니라
+            서버 안에서 파일·프로세스·로그를 감시하는 HIDS도 IDS에 포함된다.
+          </p>
+
+          <h3>IPS — 탐지 결과를 차단 행동으로 연결한다</h3>
+          <p>
+            IPS(Intrusion Prevention System)는 IDS의 탐지 기능에 차단 또는 완화 행동을 더한다.
+            네트워크형 IPS는 일반적으로 모든 트래픽이 지나가는 인라인 경로에서 패킷 폐기, 연결 흐름 차단,
+            세션 종료 등을 수행한다. 호스트형 IPS는 프로세스 실행, 파일 변경, 시스템 행위나 네트워크 접속을 막을 수 있다.
+          </p>
+          <p>
+            이름에 prevention이 들어간다고 모든 공격을 예방하는 것은 아니다. IPS가 막을 수 있는 것은 센서가 볼 수 있고,
+            규칙이나 모델이 악성으로 판정했으며 해당 장비에 차단 권한이 있는 활동뿐이다. IPS는 IDS의 완전한 대체품이라기보다
+            <strong>탐지 결과에 더 큰 운영 책임을 부여한 배치 방식</strong>으로 이해하는 편이 정확하다.
+          </p>
+
+          <h2 id="difference">IDS와 IPS의 핵심 차이</h2>
+          <div class="table-scroll" role="region" aria-label="IDS와 IPS 비교" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>비교 항목</th><th>IDS</th><th>IPS</th></tr></thead>
+              <tbody>
+                <tr><td>중심 목표</td><td>의심 행위 식별·기록·경보</td><td>의심 행위 식별 후 차단·완화</td></tr>
+                <tr><td>일반적 배치</td><td>TAP·SPAN 트래픽 복사본 또는 호스트 에이전트</td><td>네트워크 인라인 또는 호스트 제어 지점</td></tr>
+                <tr><td>탐지 결과</td><td>경보, 로그, 조사 티켓</td><td>허용, 패킷 폐기, 흐름 차단, 세션 종료, 격리</td></tr>
+                <tr><td>오탐의 영향</td><td>분석 업무와 경보 피로 증가</td><td>정상 통신 차단과 서비스 장애 가능</td></tr>
+                <tr><td>장비 장애</td><td>통신 경로를 직접 끊지 않는 경우가 많음</td><td>지연·통신 단절·단일 실패 지점이 될 수 있음</td></tr>
+                <tr><td>운영 초점</td><td>가시성, 로그 품질, 분류와 조사 속도</td><td>정확도와 함께 처리량, 지연, 우회, 고가용성</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="code-block" aria-label="수동형 IDS와 인라인 IPS 배치 구조">
+            <div class="code-title"><span>DEPLOYMENT PATH</span><span>PASSIVE vs INLINE</span></div>
+            <pre><code>[수동형 IDS]
+사용자 ─────────→ 스위치 ─────────→ 목적지
+                    └─ TAP / SPAN 복사 ─→ IDS ─→ 경보 ─→ SIEM / SOC
+
+[인라인 IPS]
+사용자 ─────────→ IPS ── 허용 ────→ 목적지
+                    └─ 폐기 / 종료 ─→ 차단</code></pre>
+          </div>
+          <p>
+            수동형 IDS는 실제 패킷의 복사본을 보므로 센서가 느려지거나 멈춰도 원래 통신은 대체로 계속된다.
+            대신 이미 목적지로 향한 패킷을 확실히 막기는 어렵다. 인라인 IPS는 모든 패킷이 자신을 통과하므로 즉시 차단할 수 있지만,
+            성능 부족과 장애가 서비스 가용성에 직접 영향을 준다. NIST도 예방 기능을 사용할 때는 일반적으로 인라인 센서를,
+            사용하지 않을 때는 수동 센서를 배치하도록 설명한다.
+          </p>
+
+          <h2 id="workflow">탐지부터 대응까지의 동작 원리</h2>
+          <div class="code-block" aria-label="IDS와 IPS 처리 파이프라인">
+            <div class="code-title"><span>EVENT PIPELINE</span><span>COLLECT → DECIDE → RESPOND</span></div>
+            <pre><code>패킷 · 흐름 · 시스템 이벤트 수집
+              ↓
+조각 · TCP 스트림 재조립 / 표현 정규화
+              ↓
+프로토콜 · 세션 · 사용자 · 자산 문맥 부여
+              ↓
+시그니처 + 이상 행위 + 상태 기반 분석
+              ↓
+       심각도와 대응 정책 결정
+        ┌─────┴─────┐
+        ↓           ↓
+   IDS: 경보·기록   IPS: 허용·폐기·종료
+        └─────┬─────┘
+              ↓
+분석가 판정 → 예외·임계값·규칙 튜닝</code></pre>
+          </div>
+          <ol>
+            <li><strong>수집:</strong> 패킷, 흐름 정보, DNS·HTTP·TLS 메타데이터, 운영체제 로그, 파일 변경, 프로세스 실행 등을 받는다.</li>
+            <li><strong>재조립과 정규화:</strong> IP 조각과 TCP 스트림을 재조립하고 인코딩 차이를 정리해 우회 기법의 영향을 줄인다.</li>
+            <li><strong>문맥 부여:</strong> 연결 방향, 세션 상태, 사용자, 자산 중요도, 취약점과 허용 정책을 연결한다.</li>
+            <li><strong>탐지:</strong> 시그니처, 이상 행위, 상태 기반 프로토콜 분석을 단독 또는 조합해 적용한다.</li>
+            <li><strong>판정:</strong> 공격 가능성, 규칙 신뢰도와 자산 영향을 이용해 심각도와 대응을 결정한다.</li>
+            <li><strong>출력과 대응:</strong> 경보를 SIEM·SOAR로 보내고, IPS 모드라면 패킷 폐기나 세션 종료를 실행한다.</li>
+            <li><strong>피드백:</strong> 분석가가 참·거짓 경보를 구분하고 예외, 임계값과 규칙을 조정한다.</li>
+          </ol>
+
+          <h2 id="detection">공격을 판단하는 세 가지 핵심 방식</h2>
+          <div class="table-scroll" role="region" aria-label="IDS와 IPS 탐지 방식" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>방식</th><th>판단 기준</th><th>잘하는 일</th><th>약점</th></tr></thead>
+              <tbody>
+                <tr><td>시그니처 기반</td><td>알려진 공격 패턴, 헤더, IoC, 규칙과 일치</td><td>알려진 공격을 빠르고 구체적으로 식별</td><td>새 공격과 변형, 암호화 페이로드에 취약하며 업데이트 필요</td></tr>
+                <tr><td>이상 기반</td><td>정상 기준선에서 통계·행동적으로 이탈</td><td>미지 공격의 징후, 스캔, 트래픽 급증과 행동 변화 탐색</td><td>환경 변화에도 경보가 나기 쉬우며 기준선 오염 가능</td></tr>
+                <tr><td>상태 기반 분석</td><td>프로토콜의 정상 상태 전이와 명령 의미에서 이탈</td><td>비정상 명령 순서, 규격 위반과 세션 문맥 탐지</td><td>상태 추적 비용이 크고 불완전한 모델은 부정확할 수 있음</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            현대 IDPS는 이 방법들을 결합한다. HTTP 요청을 재조립하고 URI를 정규화한 뒤 알려진 악성 문자열을 찾는 동시에,
+            요청 빈도나 평소와 다른 목적지 같은 행동 변화도 평가할 수 있다. 상태 기반 분석은 FTP 인증 전후처럼
+            프로토콜의 현재 상태를 기억해 같은 명령도 사용된 시점에 따라 다르게 판단한다.
+          </p>
+
+          <h3>오탐과 미탐</h3>
+          <p>
+            <strong>오탐(False Positive)</strong>은 정상 활동을 공격으로 판단한 경우이고,
+            <strong>미탐(False Negative)</strong>은 공격을 놓친 경우다. 임계값을 민감하게 하면 미탐은 줄어들 수 있지만
+            오탐과 분석 비용이 늘고, 느슨하게 하면 반대가 된다. 둘을 완전히 제거할 수는 없다.
+          </p>
+          <p>
+            IDS의 오탐은 경보 피로를 만들지만 IPS의 오탐은 정상 서비스를 실제로 끊는다. 따라서 규칙별 신뢰도,
+            대상 자산, 재현 시험, 예외 정책과 되돌리기 절차를 함께 관리해야 한다.
+          </p>
+
+          <h2 id="types">어디를 관찰하는가 — IDS와 IPS의 유형</h2>
+          <div class="table-scroll" role="region" aria-label="IDS와 IPS 유형" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>유형</th><th>관찰 대상</th><th>강점</th><th>한계와 활용</th></tr></thead>
+              <tbody>
+                <tr><td>NIDS / NIPS</td><td>경계·DMZ·내부 구간 트래픽</td><td>여러 호스트와 프로토콜 공격을 한 센서로 관찰</td><td>암호화 페이로드와 보이지 않는 경로가 사각지대</td></tr>
+                <tr><td>HIDS / HIPS</td><td>로그, 파일, 프로세스, 설정, 시스템 행위</td><td>복호화 뒤의 호스트 활동과 사용자·프로세스 문맥 확보</td><td>에이전트 운영과 자원 사용 부담</td></tr>
+                <tr><td>WIDS / WIPS</td><td>무선 주파수와 802.11 프레임</td><td>불법·위장 AP와 비정상 인증 탐지</td><td>상위 애플리케이션 공격 가시성은 제한적</td></tr>
+                <tr><td>NBA / 행동 분석</td><td>NetFlow·IPFIX와 장기 통신 패턴</td><td>DDoS, 스캔, 웜 확산과 횡적 이동 징후 탐지</td><td>기준선 학습과 환경 변화 관리 필요</td></tr>
+                <tr><td>애플리케이션 특화</td><td>웹·DB·메일 등 특정 서비스</td><td>서비스 의미를 이용한 정밀 정책</td><td>범용 가시성이 낮아 다른 통제와 결합</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            NIST SP 800-94는 네트워크 기반, 무선, 네트워크 행동 분석, 호스트 기반의 네 부류로 정리한다.
+            어느 하나가 전체를 덮지는 못한다. 네트워크 센서가 암호화된 요청 내부를 보지 못하더라도 호스트 에이전트는
+            복호화 뒤의 프로세스 활동을 볼 수 있다. 서로 다른 관측 지점을 겹치는 이유다.
+          </p>
+
+          <h3>일반적인 구성 요소</h3>
+          <ul>
+            <li><strong>센서·에이전트:</strong> 패킷이나 호스트 이벤트를 수집·분석한다.</li>
+            <li><strong>관리 서버:</strong> 정책과 규칙을 배포하고 여러 센서의 이벤트를 집계한다.</li>
+            <li><strong>이벤트 저장소:</strong> 원본 이벤트, 경보와 메타데이터를 보존한다.</li>
+            <li><strong>콘솔:</strong> 검색, 분류, 튜닝, 상태 확인과 보고서를 제공한다.</li>
+            <li><strong>연동 계층:</strong> SIEM·SOAR·방화벽·EDR·티켓 시스템을 연결한다.</li>
+          </ul>
+
+          <h2 id="limits">장단점과 반드시 알아야 할 한계</h2>
+          <div class="table-scroll" role="region" aria-label="IDS와 IPS 장단점" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>구분</th><th>장점</th><th>단점</th></tr></thead>
+              <tbody>
+                <tr><td>IDS</td><td>도입 위험이 낮고 가시성·포렌식 자료·기준선 학습에 유리</td><td>대응이 늦으면 공격이 계속되며 오탐·경보 피로·수집 사각지대 발생</td></tr>
+                <tr><td>IPS</td><td>고신뢰 공격을 목표 도달 전에 막고 반복 공격 대응 시간을 단축</td><td>오탐이 장애로 이어지고 인라인 지연·처리량·단일 실패 지점 위험 존재</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>암호화 트래픽</h3>
+          <p>
+            네트워크 센서는 일반적으로 HTTPS·VPN·SSH의 암호화된 페이로드 내부를 직접 검사하기 어렵다.
+            연결 대상, 인증서, 트래픽 크기 같은 메타데이터는 분석할 수 있지만 실제 요청 본문까지 보는 것과는 다르다.
+            복호화 지점 뒤에 센서를 배치하거나 호스트 감시를 결합해야 하며, 복호화의 개인정보 보호·키 관리·성능 비용도 고려해야 한다.
+          </p>
+
+          <h3>고속 트래픽과 우회</h3>
+          <p>
+            수동 센서는 과부하 때 패킷을 놓쳐 미탐이 생길 수 있고 인라인 IPS는 지연이나 통신 중단을 만들 수 있다.
+            실제 용량은 회선 속도뿐 아니라 패킷 크기, 동시 세션, 활성 규칙과 재조립 수준에 따라 달라진다.
+            공격자는 패킷 분할, 인코딩, 타이밍 변화와 경보 홍수로 센서를 속이려 하므로 정규화와 상태 추적도 필요하다.
+          </p>
+
+          <h3>가상 패치와 장애 정책</h3>
+          <p>
+            IPS 규칙으로 특정 취약점 악용 패턴을 임시 차단하는 가상 패치는 실제 소프트웨어 패치를 대체하지 않는
+            <strong>임시 보완 통제</strong>다. 인라인 IPS가 고장났을 때 트래픽을 통과시키는 fail-open은 가용성을 지키지만 검사가 사라지고,
+            막는 fail-closed는 장비 장애가 업무 중단으로 번질 수 있다. 서비스 중요도와 다른 보완 통제에 따라 구간별로 정하고
+            고가용성·우회·복구 시험을 준비해야 한다.
+          </p>
+
+          <h2 id="deployment">실제 환경에 구축하고 운영하는 방법</h2>
+          <h3>권장 배치 예시</h3>
+          <ul class="article-checklist">
+            <li><span><strong>인터넷 경계:</strong> 방화벽 뒤에서 허용된 트래픽을 정밀 분석하고 검증된 규칙만 NIPS로 차단한다.</span></li>
+            <li><span><strong>DMZ:</strong> 웹·메일·DNS 서버 앞뒤에서 외부 공격과 침해 뒤 외부 통신을 함께 본다.</span></li>
+            <li><span><strong>내부 핵심 구간:</strong> 사용자망과 서버망, 중요 업무망 사이의 동서 트래픽을 감시한다.</span></li>
+            <li><span><strong>중요 서버:</strong> HIDS·HIPS로 계정, 프로세스, 파일 무결성과 설정 변경을 관찰한다.</span></li>
+            <li><span><strong>클라우드:</strong> 가상 TAP·미러링, 흐름 로그와 워크로드 에이전트를 조합한다.</span></li>
+            <li><span><strong>OT·고가용성 환경:</strong> 먼저 수동 IDS로 기준선을 확보하고 호환성 시험 뒤 차단을 검토한다.</span></li>
+          </ul>
+
+          <h3>IDS로 관찰한 뒤 IPS로 전환한다</h3>
+          <ol>
+            <li><strong>목표를 정한다.</strong> 보호할 자산, 위협, 허용 지연, 가용성 요구와 책임자를 문서화한다.</li>
+            <li><strong>관측 지점을 설계한다.</strong> 실제 트래픽 경로와 암호화·복호화 위치를 확인한다.</li>
+            <li><strong>IDS 모드로 시작한다.</strong> 제한된 센서와 규칙으로 정상 트래픽, 오탐과 처리량을 측정한다.</li>
+            <li><strong>환경에 맞게 튜닝한다.</strong> 자산별 정책, 임계값, 억제, 허용 목록과 변경 일정을 반영한다.</li>
+            <li><strong>차단 후보를 고른다.</strong> 신뢰도가 높고 영향 범위가 명확하며 재현 가능한 규칙만 선별한다.</li>
+            <li><strong>점진적으로 전환한다.</strong> 시험망, 카나리 구간, 제한된 시간대 순으로 적용하고 즉시 되돌릴 절차를 준비한다.</li>
+            <li><strong>지속 운영한다.</strong> 규칙·엔진 업데이트, 용량 감시, 우회 시험, 탐지 공백 점검과 모의훈련을 반복한다.</li>
+          </ol>
+          <p>
+            NIST도 새 배포는 시험 환경과 소수 센서부터 시작하고, 초기에는 예방 기능을 끈 상태에서 오탐을 튜닝한 뒤
+            단계적으로 확대하도록 권고한다. IPS라는 이유만으로 처음부터 모든 규칙을 차단 모드로 켜서는 안 된다.
+          </p>
+
+          <h3>운영 지표</h3>
+          <ul>
+            <li>경보 중 실제 위협으로 확인된 비율과 규칙별 오탐 비율</li>
+            <li>통제된 공격 테스트의 탐지율과 평균 탐지·대응 시간</li>
+            <li>중요 자산과 네트워크 구간의 센서 가시성</li>
+            <li>패킷 손실률, 처리량, 지연, CPU·메모리 여유</li>
+            <li>IPS 차단 중 정상 업무에 영향을 준 건수</li>
+            <li>규칙 업데이트·예외 검토와 센서 장애 복구 시간</li>
+          </ul>
+
+          <h2 id="practice">Snort 3 규칙으로 보는 IDS와 IPS</h2>
+          <p>
+            다음은 외부에서 내부 웹 서버의 특정 백업 경로를 요청하면 경보를 내는 교육용 예시다.
+            경로 문자열 하나만으로 악성을 확정할 수 없으므로 실제 환경에서는 자산, 인증, 응답 코드와 요청 빈도 같은 조건을 더해야 한다.
+          </p>
+          <div class="code-block" aria-label="Snort 3 경보 규칙 예시">
+            <div class="code-title"><span>LOCAL RULE</span><span>SNORT 3 / IDS</span></div>
+            <pre><code>alert http $EXTERNAL_NET any -&gt; $HOME_NET any (
+    msg:"LOCAL Suspicious backup path request";
+    flow:to_server,established;
+    http_uri;
+    content:"/admin/backup.zip",nocase;
+    sid:1000001;
+    rev:1;
+)</code></pre>
+          </div>
+          <p>
+            헤더는 동작, 프로토콜, 주소, 포트와 방향을 정하고 본문은 일치 조건과 메시지를 정의한다.
+            충분히 검증한 뒤 첫 단어를 <code>drop</code>으로 바꾸면 <strong>인라인 또는 active DAQ로 구성된 환경에서</strong>
+            실제 차단 규칙으로 동작할 수 있다. Snort 3은 <code>alert</code>, <code>block</code>, <code>drop</code>,
+            <code>log</code>, <code>pass</code>와 <code>react</code>, <code>reject</code>, <code>rewrite</code> 같은 동작을 제공한다.
+          </p>
+          <div class="note-box">
+            <strong>SYNTAX IS NOT SAFETY</strong>
+            <p>
+              문법상 <code>alert</code>를 <code>drop</code>으로 바꿀 수 있다는 사실과 운영상 안전하다는 판단은 다르다.
+              정상 관리 작업이 같은 경로를 사용한다면 이 규칙은 업무를 막는다. 정상·공격·변형 입력을 시험하고
+              적용 범위, 모니터링 지표와 롤백 기준을 남겨야 한다.
+            </p>
+          </div>
+
+          <h2 id="ecosystem">방화벽·SIEM·EDR과 무엇이 다른가</h2>
+          <div class="table-scroll" role="region" aria-label="IDS IPS 관련 기술 비교" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>기술</th><th>주된 역할</th><th>IDPS와의 관계</th></tr></thead>
+              <tbody>
+                <tr><td>방화벽</td><td>IP·포트·상태·정책에 따른 허용과 차단</td><td>넓은 접근 제어 뒤 IDPS가 허용 트래픽을 더 깊게 분석</td></tr>
+                <tr><td>WAF</td><td>HTTP 애플리케이션 계층 보호</td><td>NIPS와 일부 기능이 겹치며 웹 요청 문맥에 특화</td></tr>
+                <tr><td>SIEM</td><td>여러 보안 로그 수집·검색·상관분석</td><td>IDPS 경보를 다른 로그와 결합해 조사 문맥 제공</td></tr>
+                <tr><td>SOAR</td><td>대응 절차 자동화</td><td>검증된 경보 뒤 차단·계정 잠금·티켓 생성을 자동화</td></tr>
+                <tr><td>EDR</td><td>엔드포인트 행위 탐지·조사·대응</td><td>HIDS·HIPS와 겹치지만 더 넓은 원격 조사 기능 제공</td></tr>
+                <tr><td>NDR</td><td>네트워크 메타데이터와 장기 행동 분석</td><td>NIDS·NBA와 겹치며 횡적 이동과 관계 분석에 초점</td></tr>
+                <tr><td>Zeek</td><td>수동 네트워크 분석과 프로토콜 로그 생성</td><td>직접 전달 결정을 하지 않고 조사·가시성에 강점</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Zeek는 커널의 패킷 전달 결정에 참여하지 않아 직접 패킷을 차단·폐기·수정하지 않는다.
+            대신 구조화된 연결·프로토콜 로그를 만들고, 스크립트 API로 방화벽이나 스위치 같은 외부 장비와 연동할 수 있다.
+            하나의 제품 이름보다 <strong>어디에서 어떤 데이터를 보고 어떤 행동 권한을 갖는지</strong>가 더 중요하다.
+          </p>
+
+          <h2 id="takeaways">정리 — 탐지보다 어려운 것은 안전한 차단이다</h2>
+          <p>
+            IDS와 IPS의 가장 큰 차이는 탐지 뒤 실제 통신이나 시스템 상태를 바꾸는가에 있다.
+            IDS는 가시성과 조사 근거를 제공하고, IPS는 고신뢰 탐지를 빠른 차단으로 연결한다.
+            좋은 운영은 둘 중 하나를 고르는 문제가 아니다. IDS로 환경을 이해하고 정확도가 입증된 좁은 범위부터 IPS를 적용하며,
+            호스트·네트워크·무선·행동 분석을 겹쳐 사각지대를 줄이는 과정이다.
+          </p>
+          <ul class="article-checklist">
+            <li><span><strong>보이지 않으면 탐지할 수 없다.</strong> 센서 위치와 실제 트래픽·암호화 경로를 먼저 확인한다.</span></li>
+            <li><span><strong>탐지는 침해 확정이 아니다.</strong> 오탐·미탐과 자산·사용자 문맥을 함께 본다.</span></li>
+            <li><span><strong>차단은 가용성 결정이다.</strong> IPS 규칙에는 시험, 승인, 모니터링과 롤백이 따라야 한다.</span></li>
+            <li><span><strong>IDPS는 한 방어 계층이다.</strong> 패치, 계정 보안, 세분화, 백업과 사고 대응을 함께 운영한다.</span></li>
+          </ul>
+
+          <h3>공식 참고 자료</h3>
+          <ul>
+            <li><a href="https://csrc.nist.gov/pubs/sp/800/94/final" target="_blank" rel="noreferrer">NIST SP 800-94 — Guide to Intrusion Detection and Prevention Systems</a></li>
+            <li><a href="https://csrc.nist.gov/glossary/term/intrusion_detection_system" target="_blank" rel="noreferrer">NIST CSRC Glossary — Intrusion Detection System</a></li>
+            <li><a href="https://csrc.nist.gov/glossary/term/intrusion_prevention_system" target="_blank" rel="noreferrer">NIST CSRC Glossary — Intrusion Prevention System</a></li>
+            <li><a href="https://docs.snort.org/rules/" target="_blank" rel="noreferrer">Snort 3 Rule Writing Guide — The Basics</a></li>
+            <li><a href="https://docs.snort.org/rules/headers/actions" target="_blank" rel="noreferrer">Snort 3 Rule Writing Guide — Rule Actions</a></li>
+            <li><a href="https://docs.suricata.io/en/latest/ips/ips-concept.html" target="_blank" rel="noreferrer">Suricata User Guide — IPS Concept</a></li>
+            <li><a href="https://docs.zeek.org/en/current/about/what.html" target="_blank" rel="noreferrer">Zeek Documentation — What Is Zeek?</a></li>
+            <li><a href="https://www.cisa.gov/sites/default/files/publications/AA20-245A-Joint_CSA-Technical_Approaches_to_Uncovering_Malicious_Activity_508.pdf" target="_blank" rel="noreferrer">CISA — Technical Approaches to Uncovering Malicious Activity</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_008 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>

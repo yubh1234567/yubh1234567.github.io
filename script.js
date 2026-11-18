@@ -17,6 +17,15 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.18",
+    title: "IDS와 IPS는 공격을 어떻게 찾아내고 막는가",
+    summary: "침입 탐지부터 차단까지 어떤 판단이 일어날까? IDS와 IPS의 원리, 유형, 차이와 안전한 운영 방법을 정리한다.",
+    tags: ["IDS", "IPS", "Network Security"],
+    url: "posts/ids-ips-guide.html",
+    draft: false,
+  },
+  {
+    category: "docs",
+    date: "2026.11.18",
     title: "서버가 멈추자 자동차도 시동을 걸지 못했다",
     summary: "차에 고장이 없는데 왜 시동이 막힐까? Intoxalock 서버 장애가 운전자에게 닿은 과정과 차량의 클라우드 의존성.",
     tags: ["보안 사고", "차량 보안", "Availability"],
