@@ -35,7 +35,7 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.18",
-    title: "서버가 멈추자 자동차도 시동을 걸지 못했다",
+    title: "Intoxalock 사이버공격과 시동 제한 사고",
     summary: "회사 시스템에 대한 사이버공격으로 정기 점검 업무가 중단돼 일부 운전자가 차를 쓰지 못한 서비스 가용성 사고.",
     tags: ["보안 사고", "차량 보안", "Availability"],
     url: "posts/intoxalock-cyberattack.html",
@@ -44,7 +44,7 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.10",
-    title: "내 차의 안드로이드가 봇넷이 됐다",
+    title: "DoFun 차량용 안드로이드 악성코드 감염 사건",
     summary: "정상 업데이트 앱으로 악성코드가 설치돼 차량용 기기가 공격자 대신 인터넷 요청을 보낸 사건. 봇넷 감염의 과정과 의미를 쉽게 풀었다.",
     tags: ["보안 사고", "차량 보안", "IVI"],
     url: "posts/dofun-head-unit-botnet.html",
