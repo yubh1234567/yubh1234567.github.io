@@ -3,7 +3,7 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
-const ARTICLE_REVISION = "20261118-4";
+const ARTICLE_REVISION = "20261118-5";
 
 function postHref(post) {
   if (post.draft || !post.url.startsWith("posts/")) return post.url;
@@ -25,7 +25,7 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.18",
-    title: "암호화만 하면 안전할까",
+    title: "암호 체계 실패",
     summary: "OWASP Top 10:2025와 A04 암호 체계 실패를 통해 비밀번호 저장, HTTPS, 키 관리와 보안 난수의 원리를 쉽게 살펴본다.",
     tags: ["OWASP", "Cryptography", "Application Security"],
     url: "posts/owasp-cryptographic-failures.html",
