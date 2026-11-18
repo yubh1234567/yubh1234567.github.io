@@ -26,10 +26,10 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.18",
-    title: "견인 한 번 불렀는데, 내 사고 기록은 어디까지 갔을까?",
-    summary: "긴급출동 위탁업체의 접수 시스템에 무단 접근해 연락처·차량·사고 기록이 유출된 사건. 원인과 운전자에게 남은 위험을 살펴본다.",
+    title: "차를 빌리려고 맡긴 내 정보가 유출됐다",
+    summary: "쏘카의 내부용 회원 조회 기능에 대한 외부 공격으로 고객 248명의 정보가 유출됐다. 사고의 흐름과 접근 권한, 대응과 남은 과제를 쉽게 살펴본다.",
     tags: ["보안 사고", "차량 보안", "개인정보"],
-    url: "posts/pcs-roadside-data-breach.html",
+    url: "posts/socar-member-data-breach.html",
     draft: false,
   },
   {
