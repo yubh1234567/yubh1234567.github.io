@@ -105,6 +105,36 @@
   line-height: 1.5;
 }
 
+/* Keep cached article markup compatible with the date-only header. */
+.article-hero .article-signal,
+.article-hero .article-category,
+.article-meta dt,
+.article-meta > div {
+  display: none;
+}
+
+.article-hero:has(> .article-meta) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.article-hero > .article-meta {
+  order: -1;
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.article-meta > div:has(time) {
+  display: block;
+}
+
+.article-meta dd {
+  margin: 0;
+}
+
 .article-hero h1 {
   max-width: 900px;
   margin: 0;

@@ -3,6 +3,14 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
+const ARTICLE_REVISION = "20261118-3";
+
+function postHref(post) {
+  if (post.draft || !post.url.startsWith("posts/")) return post.url;
+  const separator = post.url.includes("?") ? "&" : "?";
+  return `${post.url}${separator}v=${ARTICLE_REVISION}`;
+}
+
 const categories = [
   { id: "development", number: "01", title: "개발", subtitle: "차량 보안 · AI 활용" },
   { id: "ctf", number: "02", title: "CTF / Wargame", subtitle: "문제 풀이 · 회고" },
@@ -187,14 +195,14 @@ function postTemplate(post) {
         <span class="post-category">${category.title}</span>
         <time>${post.date}</time>
       </div>
-      <a class="post-content" href="${post.url}">
+      <a class="post-content" href="${postHref(post)}">
         <h4>${post.title}</h4>
         <p>${post.summary}</p>
         <div class="post-tags" aria-label="태그">
           ${post.tags.map((tag) => `<span class="post-tag">#${tag}</span>`).join("")}
         </div>
       </a>
-      <a class="post-arrow" href="${post.url}" aria-label="${post.title} 읽기">↗</a>
+      <a class="post-arrow" href="${postHref(post)}" aria-label="${post.title} 읽기">↗</a>
     </article>
   `;
 }
@@ -251,7 +259,7 @@ function renderSearchResults(query) {
     ? matches
         .map((post) => {
           const category = categoryById(post.category);
-          return `<a class="search-result" href="${post.url}"><small>${category.title} · ${post.date}</small><strong>${post.title}</strong></a>`;
+          return `<a class="search-result" href="${postHref(post)}"><small>${category.title} · ${post.date}</small><strong>${post.title}</strong></a>`;
         })
         .join("")
     : "<p>일치하는 공개 기록이 없습니다.</p>";
