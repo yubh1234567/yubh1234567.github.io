@@ -3,7 +3,7 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
-const ARTICLE_REVISION = "20261118-5";
+const ARTICLE_REVISION = "20261118-6";
 
 function postHref(post) {
   if (post.draft || !post.url.startsWith("posts/")) return post.url;
