@@ -322,6 +322,7 @@
 
 .article-body strong {
   color: var(--ink);
+  font-size: inherit;
   font-weight: 700;
 }
 
@@ -359,7 +360,7 @@
   content: "";
 }
 
-.note-box strong {
+.note-box > strong {
   display: block;
   margin-bottom: 9px;
   color: var(--cyan);
