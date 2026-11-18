@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="2026년 Oracle PeopleSoft 제로데이 악용으로 닛산 직원의 급여·금융·신원정보가 노출된 실제 데이터 침해 사고의 원인·대응·보완점을 분석합니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>패치가 나오기 전, 닛산 직원 정보가 빠져나갔다 — PeopleSoft 사고 분석 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261110-2" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-signal" aria-hidden="true">
+          <span>ZERO-DAY</span><i></i><span>PEOPLESOFT</span><i></i><span>LOG_007</span>
+        </div>
+        <div class="article-heading">
+          <span class="article-category">SESSION_007 / SECURITY INCIDENT · CASE 03</span>
+          <h1>패치가 나오기 전,<br /><em>닛산 직원 정보가 빠져나갔다</em></h1>
+          <p class="article-lede">
+            공격자는 자동차나 공장을 직접 노리지 않았다. 급여와 세금 정보를 관리하는 Oracle PeopleSoft의
+            인증 없는 원격 코드 실행 제로데이를 악용해 자동차 회사의 가장 민감한 인사 데이터에 도달했다.
+          </p>
+        </div>
+        <dl class="article-meta" aria-label="글 정보">
+          <div><dt>DATE</dt><dd><time datetime="2026-11-18">2026.11.18</time></dd></div>
+          <div><dt>READ</dt><dd>18 MIN</dd></div>
+          <div><dt>NODE</dt><dd>Automotive IT</dd></div>
+          <div><dt>STATUS</dt><dd><span>PUBLISHED</span></dd></div>
+        </dl>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#summary"><span>01</span>사건 개요</a></li>
+            <li><a href="#timeline"><span>02</span>시간순 재구성</a></li>
+            <li><a href="#chain"><span>03</span>공격 경로</a></li>
+            <li><a href="#root-cause"><span>04</span>근본 원인</a></li>
+            <li><a href="#response"><span>05</span>대응 평가</a></li>
+            <li><a href="#gaps"><span>06</span>미흡한 부분</a></li>
+            <li><a href="#lessons"><span>07</span>재발 방지</a></li>
+            <li><a href="#sources"><span>08</span>근거 자료</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>SCOPE FIRST</strong>
+            <p>
+              이 사건은 2026년 5~6월 실제 공격자가 닛산의 직원 데이터를 무단 접근한 <strong>확인된 데이터 침해 사고</strong>다.
+              다만 차량 원격 제어나 생산라인 침해가 아니라 자동차 제조사의 인사·급여 시스템 사고다. 공개 자료에는 고객 차량 정보,
+              커넥티드카 서비스 또는 자동차 ECU가 영향을 받았다는 증거가 없다.
+            </p>
+          </div>
+
+          <h2 id="summary">사건 개요 — 자동차 회사의 급여 시스템이 표적이 됐다</h2>
+          <p>
+            Nissan Americas는 Oracle PeopleSoft를 이용해 미국·캐나다·멕시코·브라질의 직원 급여, 세금, 인사 기록을 관리했다.
+            2026년 6월 Oracle은 PeopleSoft 고객 수백 곳의 인사 기록이 공격자에게 넘어갔을 수 있다고 알렸고, 닛산은 자사도
+            직접 표적이 됐으며 일부 직원 정보가 무단 접근됐다고 확인했다.
+          </p>
+          <p>
+            노출 가능 정보는 연락처에 그치지 않았다. 은행 계좌 정보, 미국 사회보장번호·캐나다 사회보험번호·기타 국가 신원번호,
+            금융·세금 자료, 부양가족과 수익자 정보가 포함됐다. 이 조합은 계정 탈취, 급여 계좌 변경 사기, 세금 환급 사기,
+            정교한 임직원 피싱에 장기간 악용될 수 있다.
+          </p>
+
+          <div class="table-scroll" role="region" aria-label="닛산 PeopleSoft 사고 핵심 사실" tabindex="0">
+            <table class="article-table metrics-table">
+              <thead><tr><th>항목</th><th>확인된 내용</th><th>해석의 한계</th></tr></thead>
+              <tbody>
+                <tr><td>공격 기간</td><td>2026년 5월 27일~6월 9일</td><td>공식 신고에 기재된 날짜이며 닛산 내부 체류 시간은 별도 공개되지 않았다.</td></tr>
+                <tr><td>진입점</td><td>Oracle PeopleSoft의 당시 미공개 취약점</td><td>닛산 공지는 ‘알려지지 않은 취약점’으로 표현했다.</td></tr>
+                <tr><td>기술 위험</td><td>CVE-2026-35273, 인증 없는 원격 코드 실행, CVSS 9.8</td><td>Oracle·Mandiant가 확인한 광범위 캠페인과 연결된 분석이다.</td></tr>
+                <tr><td>피해 데이터</td><td>급여·은행·국가 신원번호·세금·가족 정보</td><td>개인별 노출 항목과 전체 인원은 당시 조사 중이었다.</td></tr>
+                <tr><td>영향 지역</td><td>미국, 캐나다, 멕시코, 브라질의 전·현직 직원</td><td>고객·차량 시스템 영향은 공개되지 않았다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="timeline">시간순 재구성 — 공격이 끝난 다음 날 패치가 나왔다</h2>
+          <div class="code-block" aria-label="닛산 PeopleSoft 사고 타임라인">
+            <div class="code-title"><span>MAY—JUN 2026 / ZERO-DAY WINDOW</span><span>DATA THEFT</span></div>
+            <pre><code>MAY 27  PeopleSoft 대상 제로데이 악용 캠페인 관찰 시작
+   │
+   ├─ 인증 없이 취약 서버에 원격 코드 실행
+   ├─ 환경·계정 정찰과 내부 이동
+   └─ 인사·급여 데이터 수집 및 외부 반출
+   │
+JUN 09  공개된 공격 관찰 기간 종료 · 탈취 데이터 일부 유출
+JUN 10  Oracle, CVE-2026-35273 긴급 보안 경고·완화책 공개
+JUN 11  Mandiant, 100개 이상 잠재 피해 조직 통지
+JUN 25  Nissan Americas, 전·현직 직원에게 사고 안내
+JUN 26  캘리포니아 법무부에 공식 침해 신고</code></pre>
+          </div>
+          <p>
+            이 순서는 제로데이의 본질을 보여 준다. 공격자가 활동한 5월 27일부터 6월 9일까지 고객이 적용할 공식 패치는 없었다.
+            Oracle의 경고는 공격 관찰 기간이 끝난 다음 날 공개됐다. 따라서 “패치를 빨리 하지 않았다”만으로 이 사고를 설명할 수 없다.
+            외부 노출 축소, 행위 탐지, 내부 분리, 데이터 반출 감시가 패치 이전의 방어선이어야 했다.
+          </p>
+
+          <h2 id="chain">공격 경로 — 인증 없는 코드 실행에서 급여 데이터 반출까지</h2>
+          <div class="code-block" aria-label="PeopleSoft 제로데이 공격 체인">
+            <div class="code-title"><span>CAMPAIGN FLOW</span><span>EXPOSURE → RCE → EXFILTRATION</span></div>
+            <pre><code>인터넷에서 접근 가능한 PeopleSoft 관리 구성요소 탐색
+   ↓
+CVE-2026-35273 악용 · 인증 없이 원격 코드 실행
+   ↓
+PeopleSoft / WebLogic 환경 정찰
+   ↓
+원격 관리 도구·스크립트 배치
+   ↓
+탈취 또는 하드코딩된 자격 증명으로 내부 이동
+   ↓
+급여·세금·은행·신원정보 압축
+   ↓
+공격자 서버로 반출 → 공개 협박에 활용</code></pre>
+          </div>
+          <p>
+            Oracle의 공식 보안 경고에 따르면 CVE-2026-35273은 PeopleSoft Enterprise PeopleTools 8.61·8.62의 Environment
+            Management 구성요소에 영향을 주며, 인증이나 사용자 동작 없이 네트워크에서 원격 코드 실행이 가능하다. CVSS 기본 점수는
+            9.8이다. 공개된 캠페인 분석에서 공격자는 노출된 관리 엔드포인트를 표적으로 삼았다.
+          </p>
+
+          <h3>캠페인의 후속 행위</h3>
+          <p>
+            Mandiant는 공격자가 정상 클라우드 통신처럼 보이도록 위장한 원격 관리 에이전트를 사용하고, PeopleSoft와 WebLogic 구성을
+            조사한 뒤 탈취하거나 코드에 남은 자격 증명으로 내부 시스템에 이동했다고 분석했다. 파일을 압축해 외부로 전송한 정황도
+            확인했다. 이는 전체 캠페인의 공통 행위이며, 공개 자료만으로 모든 단계가 닛산 환경에서 똑같이 수행됐다고 단정할 수는 없다.
+          </p>
+
+          <h3>공격자가 노린 것은 자동차보다 오래 남는 신원정보였다</h3>
+          <p>
+            차량 제어권은 즉각적인 물리 피해를 만들지만, 급여와 신원 데이터는 수년간 재사용될 수 있다. 국가 식별번호와 은행 정보,
+            세금 자료, 가족 관계가 한 사람 단위로 결합되면 신원 도용뿐 아니라 임원을 사칭한 급여 계좌 변경, 가족을 겨냥한 피싱,
+            내부 시스템 질문에 답하는 신원 검증 우회까지 가능해진다.
+          </p>
+
+          <h2 id="root-cause">근본 원인 — 제로데이 하나가 사고 전체를 설명하지는 못한다</h2>
+          <h3>1. 패치가 존재하지 않던 고위험 원격 코드 실행</h3>
+          <p>
+            직접적인 기술 원인은 인증 없이 코드를 실행할 수 있는 PeopleSoft 제로데이다. 초기 공격 기간에는 보안 업데이트가 없어
+            닛산이 일반적인 패치 관리만으로 막기 어려웠다. 하지만 고권한 관리 구성요소가 인터넷에서 도달 가능하고 내부 데이터와
+            가까웠다면 제품 취약점 하나가 곧 데이터 침해로 이어질 수 있다.
+          </p>
+
+          <h3>2. 인사·급여 플랫폼에 집중된 고가치 데이터</h3>
+          <p>
+            PeopleSoft는 업무상 여러 국가의 급여·세금·은행·가족 정보를 한곳에서 처리한다. 중앙화는 운영 효율을 높이지만 침해 시
+            한 번에 가져갈 수 있는 데이터의 가치도 높인다. 보관 기간 최소화, 필드 단위 암호화, 토큰화, 국가·업무별 분리가 충분하지
+            않으면 애플리케이션 권한을 얻은 공격자가 지나치게 넓은 기록을 볼 수 있다.
+          </p>
+
+          <h3>3. 외부 제품의 보안 경고와 내부 대응 사이의 시간차</h3>
+          <p>
+            닛산은 Oracle의 통지를 받고 자신이 표적이 된 사실을 확인했다. 이는 공급업체가 최초 탐지를 담당하는 구조였음을 보여 준다.
+            제로데이 상황에서는 벤더 알림을 기다리는 것보다 외부 노출 자산을 정확히 알고, 비정상 프로세스·웹셸·대량 압축·외부 전송을
+            내부에서 먼저 탐지할 수 있어야 한다.
+          </p>
+
+          <h3>4. 애플리케이션 침해 뒤의 내부 이동과 데이터 반출 방어</h3>
+          <p>
+            캠페인 분석은 하드코딩된 자격 증명과 원격 관리 도구, 내부 정찰이 사용됐음을 보여 준다. 최초 서버가 뚫리더라도 서비스
+            계정이 최소 권한이고, 자격 증명이 외부 비밀 저장소에서 짧게 발급되며, 데이터 계층과 관리 계층이 분리됐다면 피해 범위를
+            줄일 수 있다. 닛산 환경의 구체적 구성은 공개되지 않았으므로 이 부분은 캠페인에서 도출한 방어 관점의 평가다.
+          </p>
+
+          <h2 id="response">대응 평가 — 봉쇄와 급여 사기 방어를 동시에 진행했다</h2>
+          <p>
+            닛산은 사고 대응 절차를 가동하고 외부 보안 전문가 및 관계 당국과 협력했으며, 영향 시스템을 보호하고 Oracle과 함께
+            무단 접근 종료와 추가 유출 방지 조치를 진행했다. 피해가 확인된 사람에게 신용·다크웹 모니터링을 제공하겠다고 안내했다.
+          </p>
+          <p>
+            특히 급여명세서 조회와 계좌 변경을 사내 컴퓨터 또는 보안 VPN으로 제한하고, 급여 요청에 추가 신원 확인을 도입한 점은
+            유출 이후 예상되는 2차 공격을 직접 겨냥한다. 유출된 은행·신원정보가 있으면 공격자가 직원이나 HR 담당자를 사칭해
+            급여 계좌를 바꾸려 할 수 있기 때문이다.
+          </p>
+          <p>
+            Oracle은 6월 10일 긴급 완화책을 내고 지원 중인 PeopleTools 8.61·8.62 사용자의 즉각적인 조치를 권고했다. Mandiant는
+            잠재 노출 조직 100곳 이상에 알리고 의심 파일, 웹셸, 변경된 설정, 비정상 외부 통신을 찾는 헌팅 기준을 제시했다.
+            제품 패치와 침해 조사라는 두 트랙이 함께 진행된 점은 적절하다.
+          </p>
+
+          <h2 id="gaps">보완이 미흡했던 부분 — 피해자에게 필요한 답이 아직 부족했다</h2>
+          <ul class="article-checklist">
+            <li><span><strong>전체 피해 인원이 공개되지 않았다.</strong> 4개국의 전·현직 직원이라는 범위만 있고 정확한 대상 수는 알 수 없다.</span></li>
+            <li><span><strong>개인별 유출 항목이 초기 공지에서 확정되지 않았다.</strong> 피해자는 어떤 계좌와 신원정보를 우선 보호해야 할지 판단하기 어렵다.</span></li>
+            <li><span><strong>탐지·통지 시점이 불명확하다.</strong> 무단 접근 종료일, Oracle 통지일, 닛산 자체 탐지 여부가 구체적으로 공개되지 않았다.</span></li>
+            <li><span><strong>닛산 환경의 공격 경로가 세분화되지 않았다.</strong> 외부 노출 범위, 내부 이동, 반출량, 로그 보존 상태를 알 수 없다.</span></li>
+            <li><span><strong>장기 재발 방지 계획이 없다.</strong> PeopleSoft 격리, 데이터 최소화, 자격 증명 구조를 어떻게 바꿀지 일정이 공개되지 않았다.</span></li>
+            <li><span><strong>차량·고객 시스템 비영향 확인이 제한적이다.</strong> 공개 자료상 영향 증거는 없지만 조사 범위와 분리 검증 결과도 제시되지 않았다.</span></li>
+          </ul>
+
+          <h2 id="lessons">재발 방지 — 제로데이는 패치 전에 버텨야 한다</h2>
+          <div class="table-scroll" role="region" aria-label="닛산 PeopleSoft 사고 재발 방지 통제" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>우선순위</th><th>통제</th><th>막는 단계</th></tr></thead>
+              <tbody>
+                <tr><td>P0</td><td>PeopleSoft 관리 구성요소를 인터넷에서 분리하고 전용 접근 프록시·VPN·기기 신뢰 적용</td><td>인증 없는 원격 악용의 도달 가능성</td></tr>
+                <tr><td>P0</td><td>PeopleSoft/WebLogic 서버의 프로세스·JSP·설정 파일 무결성 및 EDR 행위 탐지</td><td>웹셸·원격 관리 도구·지속성 확보</td></tr>
+                <tr><td>P0</td><td>인사 데이터 필드 암호화·토큰화, 업무·국가별 접근 분리와 대량 조회 제한</td><td>애플리케이션 침해 후 전 직원 데이터 수집</td></tr>
+                <tr><td>P0</td><td>서버의 외부 통신 허용 목록, 대량 압축·비정상 전송 차단과 DLP</td><td>탈취 데이터 외부 반출</td></tr>
+                <tr><td>P1</td><td>하드코딩 자격 증명 제거, 비밀 저장소와 단기 서비스 신원, 침해 시 전체 회전</td><td>최초 서버에서 내부 시스템으로 이동</td></tr>
+                <tr><td>P1</td><td>벤더 경고 전에도 적용 가능한 가상 패치·노출 차단 절차와 24시간 위협 헌팅</td><td>제로데이 공개 전 방어 공백</td></tr>
+                <tr><td>P1</td><td>급여 계좌 변경의 별도 채널 확인·대기 시간·이전 정보 통지</td><td>유출 정보를 이용한 2차 급여 사기</td></tr>
+                <tr><td>P2</td><td>영향 인원·항목·탐지 시간·재발 방지 계획을 포함한 사후 보고서</td><td>피해자 대응과 외부 검증의 불확실성</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="note-box">
+            <strong>CORE LESSON</strong>
+            <p>
+              제로데이는 “패치가 없었으니 어쩔 수 없었다”는 뜻이 아니다. 인터넷 노출 최소화, 애플리케이션 침해 탐지, 내부 분리,
+              데이터 최소화, 반출 통제가 겹쳐 있어야 제품 취약점 하나가 조직 전체의 신원정보 유출로 번지지 않는다.
+            </p>
+          </div>
+
+          <h2 id="sources">근거 자료와 한계</h2>
+          <p>
+            피해 범위와 대응은 Nissan Americas가 캘리포니아 법무부에 제출한 공지를 기준으로 했다. 취약점과 공격 캠페인의 기술
+            분석은 Oracle과 Mandiant 자료를 사용했다. 캠페인 공통 행위와 닛산 환경에서 직접 확인된 사실을 구분했으며,
+            공개되지 않은 피해 인원·반출량·내부 구조는 추정하지 않았다.
+          </p>
+          <ul>
+            <li><a href="https://oag.ca.gov/system/files/June%2025%202026%20Employee%20Communication%20Cybersecurity%20Incident%20%28English%29%20%28REG%29.pdf" target="_blank" rel="noreferrer">Nissan Americas — Employee Communication: Cybersecurity Incident</a> (2026-06-25)</li>
+            <li><a href="https://oag.ca.gov/ecrime/databreach/reports/sb24-625558" target="_blank" rel="noreferrer">California DOJ — Nissan North America Submitted Breach Notification</a></li>
+            <li><a href="https://www.oracle.com/security-alerts/alert-cve-2026-35273.html" target="_blank" rel="noreferrer">Oracle — Security Alert Advisory CVE-2026-35273</a> (2026-06-10)</li>
+            <li><a href="https://cloud.google.com/blog/topics/threat-intelligence/shinyhunters-targets-education-sector-oracle-exploit" target="_blank" rel="noreferrer">Google Threat Intelligence / Mandiant — PeopleSoft zero-day campaign analysis</a> (2026-06-11)</li>
+            <li><a href="https://www.bleepingcomputer.com/news/security/nissan-discloses-employee-data-breach-linked-to-oracle-zero-day-attacks/" target="_blank" rel="noreferrer">BleepingComputer — Nissan discloses employee data breach</a> (2026-06-29)</li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>SESSION_007 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
