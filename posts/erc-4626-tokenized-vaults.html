@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ERC-4626이 수익형 금고의 asset과 share, 예치·출금 인터페이스를 어떻게 표준화하는지, sDAI 메인넷 사례와 인플레이션 공격까지 분석합니다." />
+    <meta name="theme-color" content="#050a12" />
+    <title>ERC-4626: 수익형 금고의 공통 언어 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-24">2026.11.24</time> · EIP STUDY 04/05</p>
+          <h1>ERC-4626<br /><em>수익형 금고의 공통 언어</em></h1>
+          <p class="article-lede">
+            이더리움에는 토큰을 맡기고 그 대가로 내 몫을 나타내는 증표를 받는 프로그램이 있다. 은행의 예금이나 펀드와
+            비슷해 보이지만, 서비스마다 사용법이 달랐다. ERC-4626은 이런 디지털 금고의 입금·출금 방법을 통일한 규칙이다.
+            블록체인을 처음 접한 독자도 이해할 수 있도록 토큰과 지분의 뜻부터 시작한다.
+          </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li><code>asset</code>은 사용자가 맡기는 실제 토큰이고, <code>share</code>는 금고에서 내가 가진 몫을 나타내는 증표다.</li>
+              <li>ERC-4626은 서로 다른 금고가 같은 이름의 입금·출금 함수를 사용하도록 만든다.</li>
+              <li>표준을 따른다는 사실은 사용법이 같다는 뜻이지, 수익이나 안전성이 보장된다는 뜻은 아니다.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#basics"><span>01</span>먼저 알아둘 말</a></li>
+            <li><a href="#problem"><span>02</span>왜 등장했나</a></li>
+            <li><a href="#model"><span>03</span>asset과 share</a></li>
+            <li><a href="#interface"><span>04</span>공통 입출금 함수</a></li>
+            <li><a href="#example"><span>05</span>숫자로 보는 회계</a></li>
+            <li><a href="#mainnet"><span>06</span>sDAI 메인넷 사례</a></li>
+            <li><a href="#security"><span>07</span>한계와 보안</a></li>
+            <li><a href="#sources"><span>08</span>출처</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <h2 id="basics">먼저 알아둘 말 — 토큰과 DeFi 금고란 무엇인가</h2>
+          <p>
+            <strong>이더리움</strong>은 여러 컴퓨터가 거래 기록과 프로그램을 함께 실행하는 블록체인 네트워크다.
+            이 네트워크에서 돌아가는 프로그램을 <strong>스마트 컨트랙트</strong>라고 한다. 스마트 컨트랙트로 만든 디지털
+            자산이 토큰이며, ERC-20은 토큰의 잔액 확인과 전송 방법을 통일한 표준이다.
+          </p>
+          <p>
+            <strong>DeFi</strong>는 Decentralized Finance, 즉 탈중앙화 금융의 줄임말이다. 은행 직원이나 중앙 서버가
+            처리하던 교환·대출·예치 규칙을 스마트 컨트랙트가 실행한다. 이 글에서 말하는 <strong>금고(Vault)</strong>는
+            사용자의 토큰을 받고, 정해진 전략에 따라 관리한 뒤, 사용자의 몫을 기록하는 프로그램이다.
+          </p>
+          <div class="code-block" aria-label="일반 예금과 토큰 금고의 비유">
+            <div class="code-title"><span>BEGINNER VIEW</span><span>예금 통장에 비유하기</span></div>
+            <pre><code>은행 예금
+현금 입금 → 은행이 잔액 기록 → 나중에 현금 출금
+
+ERC-4626 금고
+토큰 예치 → 금고가 share 발행 → 나중에 share를 돌려주고 토큰 회수</code></pre>
+          </div>
+          <div class="table-scroll" role="region" aria-label="ERC-4626 기초 용어" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>용어</th><th>쉬운 뜻</th><th>예시</th></tr></thead>
+              <tbody>
+                <tr><td><code>asset</code></td><td>금고에 실제로 맡기는 토큰</td><td>DAI 100개</td></tr>
+                <tr><td><code>share</code></td><td>전체 금고에서 내가 가진 몫을 표시하는 증표</td><td>금고 지분 토큰 100개</td></tr>
+                <tr><td>수익</td><td>금고 자산이 늘어 share 하나의 가치가 커지는 것</td><td>1 share가 1 DAI에서 1.1 DAI로 증가</td></tr>
+                <tr><td>손실</td><td>금고 자산이 줄어 share 하나의 가치가 작아지는 것</td><td>1 share가 1 DAI에서 0.9 DAI로 감소</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            여기서 share는 이자를 공짜로 더 주는 쿠폰이 아니다. 금고 전체 자산 중 내 몫을 계산하기 위한 영수증에 가깝다.
+            금고가 수익을 내면 같은 share로 더 많은 asset을 받을 수 있고, 손실이 나면 더 적게 받을 수 있다.
+          </p>
+
+          <h2 id="problem">왜 등장했나 — 금고마다 새 어댑터를 만들어야 했다</h2>
+          <p>
+            대출 서비스, 여러 투자처를 모아 관리하는 서비스, 스테이킹 토큰에는 공통된 모양이 있다. 사용자가 토큰을 맡기면
+            프로그램은 그 자산을 관리하고, 사용자의 몫을 나타내는 지분 토큰을 돌려준다. 문제는 어떤 금고는
+            <code>deposit</code>, 다른 금고는 <code>stake</code>를 쓰고, 잔액과 환산 비율을 계산하는 방법도 제각각이었다는 점이다.
+          </p>
+          <p>
+            지갑 앱이나 여러 금고를 한곳에 보여 주는 서비스가 이들을 지원하려면 금고마다 전용 연결 코드를 작성해야 했다. 이름만 다른 것이 아니라
+            “100을 넣으면 지분이 몇 개 생기는가”, “지분 10개를 태우면 자산을 얼마나 받는가”, “지금 출금 가능한가”를 읽는
+            방법까지 달랐다. 어댑터가 늘수록 통합 오류와 유지보수 비용도 커진다.
+          </p>
+          <p>
+            최종 표준으로 채택된 ERC-4626은 <strong>한 종류의 ERC-20 토큰을 관리하는 금고</strong>의 최소 공통 언어를
+            정의한다. 금고의 전략이나 수익 원천을 정하는 표준이 아니라, 금고와 외부 애플리케이션이 대화하는 방법을 정한다.
+          </p>
+
+          <h2 id="model">asset과 share — 예금과 통장 지분을 분리해 보기</h2>
+          <p>
+            <strong>asset</strong>은 사용자가 맡기는 기초 ERC-20 토큰이고, <strong>share</strong>는 금고 전체에서 사용자가
+            가진 몫이다. ERC-4626 금고 자체가 ERC-20 share 토큰이므로 <code>balanceOf</code>, 즉 잔액 조회 함수는
+            기초 자산이 아니라 지분 잔액을 반환한다. 금고가 허용한다면 share를 다른 주소로 전송하거나 다른 DeFi 서비스에서
+            사용할 수도 있다.
+          </p>
+          <div class="code-block" aria-label="ERC-4626 자산과 지분 흐름">
+            <div class="code-title"><span>VAULT MODEL</span><span>ASSET ↔ SHARE</span></div>
+            <pre><code>사용자 ── 100 asset 예치 ──▶ ERC-4626 Vault
+사용자 ◀─  95 shares 발행 ──┘
+
+Vault 안의 전략에서 수익 또는 손실 발생
+
+사용자 ── 95 shares 상환 ──▶ ERC-4626 Vault
+사용자 ◀─ 현재 가치의 asset ─┘</code></pre>
+          </div>
+          <p>
+            share 하나의 가치는 고정될 필요가 없다. 금고 자산이 늘고 share 수가 그대로라면 share당 asset이 늘어난다.
+            반대로 전략에서 손실이 발생하면 줄어들 수 있다. 이 때문에 지갑은 share 잔액만 보여 주지 말고 현재 자산 가치도
+            환산해야 한다.
+          </p>
+
+          <h2 id="interface">네 개의 공통 입출금 함수 — 무엇을 정확히 지정하는가</h2>
+          <p>
+            같은 금액을 다루더라도 “토큰을 정확히 100개 넣겠다”와 “지분을 정확히 100개 받겠다”는 다른 요청이다.
+            ERC-4626은 이 차이를 네 함수 이름으로 분리한다. 아래 표에서는 <code>receiver</code>를 결과를 받을 주소,
+            <code>owner</code>를 사용할 share의 주인이라고 이해하면 된다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="ERC-4626 핵심 함수 비교" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>함수</th><th>사용자가 정확히 지정하는 값</th><th>반환값</th></tr></thead>
+              <tbody>
+                <tr><td><code>deposit(assets, receiver)</code></td><td>넣을 asset 수량</td><td>발행된 shares</td></tr>
+                <tr><td><code>mint(shares, receiver)</code></td><td>받을 share 수량</td><td>필요한 assets</td></tr>
+                <tr><td><code>withdraw(assets, receiver, owner)</code></td><td>받을 asset 수량</td><td>없어진 shares</td></tr>
+                <tr><td><code>redeem(shares, receiver, owner)</code></td><td>반납할 share 수량</td><td>받은 assets</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            실제 실행 전에는 짝이 되는 <code>previewDeposit</code>, <code>previewMint</code>, <code>previewWithdraw</code>,
+            <code>previewRedeem</code>으로 현재 조건의 예상 결과를 미리 볼 수 있다. 이름의 <code>preview</code>는 실행 전 견적,
+            <code>max</code>는 현재 허용되는 최대치를 뜻한다. 예를 들어 <code>maxDeposit</code>은 지금 예치할 수 있는 최대
+            토큰 수량을 알려 준다.
+          </p>
+          <p>
+            <code>convertToShares</code>와 <code>convertToAssets</code>는 수수료나 사용자별 조건을 제외한 평균 환산값이다.
+            반면 <code>preview*</code>는 해당 입출금의 수수료와 현재 조건을 반영해야 한다. 화면에 예상 출금액을 표시하면서
+            <code>convertToAssets</code>를 그대로 확정값처럼 쓰면 실제 결과와 달라질 수 있다.
+          </p>
+          <div class="code-block" aria-label="ERC-4626 통합 전 읽기 순서 예시">
+            <div class="code-title"><span>INTEGRATION</span><span>READ BEFORE WRITE</span></div>
+            <pre><code>// 100 asset을 예치하려는 경우
+limit  = vault.maxDeposit(user)
+shares = vault.previewDeposit(100)
+
+require(limit &gt;= 100)
+require(shares &gt;= userMinShares)
+
+asset.approve(vault, 100)
+vault.deposit(100, user)</code></pre>
+          </div>
+          <p>
+            표준 <code>deposit</code> 자체에는 “적어도 이만큼의 share는 받아야 한다”는 최소 수령량 항목이 없다. 가격이
+            예상보다 불리하게 바뀌면 거래를 취소하도록, 실제 서비스는 같은 트랜잭션 안에서 견적과 최소 수령량을 비교하는
+            보조 컨트랙트를 둘 수 있다.
+          </p>
+
+          <h2 id="example">숫자로 보는 금고 회계 — 수익은 share 가격에 반영된다</h2>
+          <p>
+            수수료와 반올림이 없는 단순한 금고를 가정해 보자. 처음 금고에는 1,000 asset과 1,000 shares가 있다.
+            따라서 1 share는 1 asset의 몫이다. 사용자가 100 asset을 예치하면 100 shares를 받고, 총량은 각각 1,100이 된다.
+          </p>
+          <p>
+            이후 전략이 100 asset의 수익을 내면 총자산은 1,200이지만 shares는 1,100으로 유지된다. 이제 1 share는 약
+            1.0909 asset의 몫이다. 방금 받은 100 shares를 전부 상환하면 반올림 전 약 109.09 asset을 받는다. 별도 이자
+            토큰을 추가로 발행하지 않아도 share와 asset의 교환 비율에 수익이 녹아든다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="금고 수익 전후의 지분 가치 예시" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>시점</th><th>totalAssets</th><th>totalSupply</th><th>share당 asset</th></tr></thead>
+              <tbody>
+                <tr><td>예치 전</td><td>1,000</td><td>1,000</td><td>1.0000</td></tr>
+                <tr><td>100 asset 예치 후</td><td>1,100</td><td>1,100</td><td>1.0000</td></tr>
+                <tr><td>100 asset 수익 후</td><td>1,200</td><td>1,100</td><td>약 1.0909</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            실제 구현은 정수 연산을 하므로 반올림 방향도 보안 규칙이다. 공식 명세는 사용자에게 발행하거나 지급하는 양은
+            대체로 내림하고, 사용자가 금고에 제공하거나 태워야 하는 양은 올림해 금고에 불리하지 않게 계산하도록 요구한다.
+          </p>
+
+          <h2 id="mainnet">실제 사용 — Savings DAI의 ERC-4626 인터페이스</h2>
+          <p>
+            <strong>메인넷</strong>은 테스트용이 아니라 실제 자산과 거래가 기록되는 이더리움 본 네트워크다. DAI는
+            미국 달러와 비슷한 가치를 유지하도록 설계된 이더리움 토큰이다. DAI Savings Rate(DSR)는 DAI를
+            예치했을 때 프로토콜 규칙에 따라 적립되는 비율이다. <strong>Savings DAI(sDAI)</strong>는 예치된 DAI의
+            지분을 나타내는 ERC-4626 토큰이다. 공식 저장소는 ERC-4626 지원과 이더리움 메인넷 배포 주소를 공개한다.
+            배포 주소는
+            <a href="https://etherscan.io/address/0x83F20F44975D03b1b09e64809B757c47f942BEeA#code" target="_blank" rel="noreferrer"><code>0x83F20F…42BEeA</code></a>다.
+          </p>
+          <p>
+            Etherscan은 메인넷에 배포된 컨트랙트와 거래 기록을 확인하는 블록 탐색기다. 이 주소의 공개된 코드에서
+            <code>asset</code>, 네 개의 <code>preview*</code>, <code>deposit/mint/withdraw/redeem</code>를 확인할 수 있다.
+            사용자는 DAI를 넣고 sDAI share를 받으며, 현재 환산 비율을 표준 함수로 읽을 수 있다. ERC-4626이 설명용
+            예제에 그치지 않고 실제 메인넷 금고에 사용된 사례다.
+          </p>
+          <p>
+            sDAI는 서명으로 토큰 사용 권한을 주는 <code>permit</code> 기능도 제공한다. 여러 ERC 표준을 한 토큰에 함께
+            적용할 수 있음을 보여 준다. 다만 실제 금리와 입출금 가능 여부는 바뀔 수 있으므로 여기서는 특정 수익률을
+            제시하지 않고 공개된 코드와 표준 함수만 확인했다.
+          </p>
+
+          <h2 id="security">표준이 해결하지 않는 것 — 같은 플러그라도 내용물은 다르다</h2>
+          <h3>ERC-4626 호환은 안전 인증이 아니다</h3>
+          <p>
+            악성 금고도 함수 이름과 반환 형식만 맞출 수 있다. 표준은 자산이 어디에 투자되는지, 관리자에게 어떤 권한이 있는지,
+            외부 가격 정보를 안전하게 가져오는지, 손실이 가능한지를 정하지 않는다. 사용 전에는 실제 코드와 투자 전략,
+            관리자 권한, 자산 회수 방법을 별도로 확인해야 한다.
+          </p>
+          <h3>빈 금고의 기부·인플레이션 공격</h3>
+          <p>
+            사람이 거의 없는 공동 금고의 첫 지분을 공격자가 차지했다고 생각해 보자. 공격자가 금고에 토큰을 그냥 보내
+            share 하나의 가격을 비정상적으로 높인 뒤 피해자가 들어오면, 정수 계산에서 피해자 몫이 0 share로 잘릴 수 있다.
+            그러면 피해자가 넣은 토큰이 기존 지분 보유자의 몫이 된다. 이를 기부 또는 인플레이션 공격이라고 한다.
+            충분한 초기 자산, 계산용 가상 asset/share, 사용자의 최소 share 확인 등으로 위험을 줄일 수 있다.
+          </p>
+          <h3>preview는 견적이지 미래 보증이 아니다</h3>
+          <p>
+            preview를 읽은 뒤 실제 트랜잭션이 실행되기 전까지 상태가 변할 수 있다. 수수료, 출금 제한, 즉시 꺼낼 수 있는 자산의 양,
+            반올림도 결과에 영향을 준다. 통합자는 올바른 preview 함수를 선택하고, 사용자가 허용할 최소 수령량이나 최대
+            지불량을 같은 트랜잭션에서 검증해야 한다.
+          </p>
+          <ul class="article-checklist">
+            <li><span><strong>표준 확인:</strong> 함수가 존재하는지만 보지 말고 명세의 반올림·이벤트·max/preview 의미를 지키는지 확인한다.</span></li>
+            <li><span><strong>자산 확인:</strong> <code>asset()</code> 주소와 토큰의 소수점 자릿수·전송 방식을 검토한다.</span></li>
+            <li><span><strong>가격 보호:</strong> 예치에는 최소 shares, 출금에는 최소 assets 같은 사용자 한도를 둔다.</span></li>
+            <li><span><strong>초기 상태:</strong> 비어 있는 금고의 첫 예치와 직접 토큰 전송을 악용한 공격을 시험한다.</span></li>
+            <li><span><strong>권한과 전략:</strong> 업그레이드 관리자, 일시정지, 투자 전략, 손실·회수 조건을 인터페이스 밖에서 조사한다.</span></li>
+          </ul>
+          <p>
+            ERC-4626의 가장 큰 성과는 모든 금고를 똑같이 만든 것이 아니라, 서로 다른 금고를 같은 질문으로 검사할 수 있게
+            만든 것이다. 인터페이스가 통일되면 지갑과 집계기는 더 쉽게 연결된다. 그만큼 하나의 잘못된 가정도 여러 통합으로
+            빠르게 퍼질 수 있으므로, <strong>표준화된 입구와 개별 금고의 위험을 구분</strong>해야 한다.
+          </p>
+
+          <h2 id="sources">출처와 확인 범위</h2>
+          <p>
+            2026년 11월 24일 확인했다. 함수의 의미와 반올림 규칙은 공식 ERC-4626 문서, 인플레이션 공격은 OpenZeppelin
+            공식 구현 문서, sDAI 사례는 프로젝트 저장소와 Etherscan의 검증된 메인넷 소스를 교차 확인했다. 현재 수익률이나
+            상품 추천은 이 글의 범위가 아니다.
+          </p>
+          <ul>
+            <li><a href="https://eips.ethereum.org/EIPS/eip-4626" target="_blank" rel="noreferrer">Ethereum Improvement Proposals — ERC-4626: Tokenized Vaults</a></li>
+            <li><a href="https://docs.openzeppelin.com/contracts/4.x/erc4626" target="_blank" rel="noreferrer">OpenZeppelin Contracts — ERC-4626 Tokenized Vaults</a></li>
+            <li><a href="https://github.com/sky-ecosystem/sdai" target="_blank" rel="noreferrer">Sky Ecosystem — Savings DAI 공식 저장소</a></li>
+            <li><a href="https://etherscan.io/address/0x83F20F44975D03b1b09e64809B757c47f942BEeA#code" target="_blank" rel="noreferrer">Etherscan — SavingsDai 메인넷 컨트랙트와 검증된 소스</a></li>
+            <li><a href="https://eips.ethereum.org/EIPS/eip-2612" target="_blank" rel="noreferrer">Ethereum Improvement Proposals — ERC-2612</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>EIP STUDY 04/05 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>

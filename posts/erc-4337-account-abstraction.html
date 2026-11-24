@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="이더리움과 지갑을 처음 접한 독자도 이해할 수 있도록 ERC-4337 스마트 계정, UserOperation, 번들러, EntryPoint와 가스비 대납을 실제 메인넷 사례로 설명합니다." />
+    <meta name="theme-color" content="#050a12" />
+    <title>ERC-4337: 지갑을 프로그램으로 바꾸는 계정 추상화 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-24">2026.11.24</time> · EIP STUDY 05/05</p>
+          <h1>ERC-4337<br /><em>지갑을 프로그램으로 바꾸는 계정 추상화</em></h1>
+          <p class="article-lede">
+            처음 지갑을 만든 사람이 이더리움 앱을 쓰려면 먼저 ETH를 구하고, 긴 비밀 복구 문구를 안전하게 보관하고,
+            작업마다 서명해야 한다. ERC-4337은 지갑을 작은 프로그램처럼 만들어 복구 방법, 여러 작업의 묶음 실행,
+            가스비 대납 같은 기능을 넣을 수 있게 한다. 이 글은 이더리움과 코인을 처음 접한 독자부터 차근차근 따라간다.
+          </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">핵심 요약</h2>
+            <ul>
+              <li>기존 지갑은 개인키 하나가 주인임을 증명하지만, ERC-4337 스마트 계정은 승인 규칙을 프로그램으로 정할 수 있다.</li>
+              <li>사용자가 요청서인 <code>UserOperation</code>에 서명하면 번들러가 이를 모아 이더리움에 제출하고 <code>EntryPoint</code>가 검사한다.</li>
+              <li>가스비가 없어지는 것은 아니다. 페이마스터가 사용자를 대신해 ETH로 먼저 내거나 다른 방식으로 정산할 수 있을 뿐이다.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#primer"><span>01</span>먼저 알아둘 말</a></li>
+            <li><a href="#name"><span>02</span>EIP인가 ERC인가</a></li>
+            <li><a href="#problem"><span>03</span>기존 지갑의 불편</a></li>
+            <li><a href="#story"><span>04</span>첫 사용자 이야기</a></li>
+            <li><a href="#flow"><span>05</span>요청이 실행되는 과정</a></li>
+            <li><a href="#roles"><span>06</span>누가 무엇을 하나</a></li>
+            <li><a href="#mainnet"><span>07</span>메인넷에서 확인하기</a></li>
+            <li><a href="#limits"><span>08</span>해결하지 못하는 것</a></li>
+            <li><a href="#takeaways"><span>09</span>기억할 점</a></li>
+            <li><a href="#sources"><span>10</span>출처와 확인 범위</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <h2 id="primer">먼저 알아둘 말 — 지갑은 코인을 담는 앱만이 아니다</h2>
+          <p>
+            <strong>이더리움</strong>은 여러 컴퓨터가 같은 거래 기록과 프로그램 실행 결과를 함께 보관하는 블록체인
+            네트워크다. <strong>ETH</strong>는 이 네트워크의 기본 코인이다. 이더리움에 송금이나 프로그램 실행을 요청하면
+            컴퓨터 자원을 사용한 대가인 <strong>가스비</strong>를 보통 ETH로 낸다.
+          </p>
+          <p>
+            이더리움에 올려 여러 사람이 함께 사용하는 프로그램을 <strong>스마트 컨트랙트</strong>라고 한다. 토큰 교환소,
+            NFT, 게임 아이템, 예치 금고도 스마트 컨트랙트로 만들 수 있다. 이런 프로그램에 “토큰을 교환해 줘”라고 보내는
+            상태 변경 요청이 <strong>트랜잭션</strong>이다.
+          </p>
+          <p>
+            지갑 앱 안에 코인이 파일처럼 들어 있는 것은 아니다. 블록체인에는 “이 주소가 얼마를 소유한다”는 기록이 있고,
+            지갑은 <strong>개인키</strong>라는 비밀값으로 그 주소의 주인임을 증명한다. 개인키로 만든 디지털 도장이
+            <strong>서명</strong>이다. 개인키 하나가 직접 지배하는 전통적인 계정을
+            <strong>외부 소유 계정(EOA)</strong>이라고 부른다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="ERC-4337을 이해하기 위한 기초 용어" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>용어</th><th>쉽게 말하면</th></tr></thead>
+              <tbody>
+                <tr><td>이더리움</td><td>여러 컴퓨터가 함께 운영하는 공용 블록체인 컴퓨터</td></tr>
+                <tr><td>ETH</td><td>이더리움의 기본 코인이자 네트워크 이용료를 내는 자산</td></tr>
+                <tr><td>가스비</td><td>송금이나 스마트 컨트랙트 실행에 드는 네트워크 이용료</td></tr>
+                <tr><td>지갑</td><td>주소와 개인키를 관리하고 요청에 서명하는 도구</td></tr>
+                <tr><td>스마트 컨트랙트</td><td>블록체인에서 정해진 규칙대로 실행되는 프로그램</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="name">EIP-4337인가 ERC-4337인가</h2>
+          <p>
+            <strong>EIP</strong>는 “이더리움을 이렇게 개선하자”는 제안 문서 전체를 뜻한다. 그중
+            <strong>ERC</strong>는 지갑·토큰·스마트 컨트랙트가 서로 호환되도록 약속한 애플리케이션 표준이다. 이 글의
+            대상은 예전부터 EIP-4337이라고 널리 불렸고 문서 주소에도 <code>eip-4337</code>이 남아 있다.
+          </p>
+          <p>
+            다만 2026년 11월 24일 공식 문서의 정식 분류와 제목은 <strong>Final · Standards Track: ERC ·
+            ERC-4337</strong>이다. 이더리움의 가장 아래 규칙을 바꾸는 대신, 이미 존재하는 이더리움 위에 컨트랙트와
+            중계 구조를 더하는 표준이기 때문이다. 따라서 이 글에서는 현재 공식 표기인 ERC-4337을 사용한다.
+          </p>
+
+          <h2 id="problem">왜 등장했나 — 기존 지갑은 비밀키 하나에 너무 많은 것을 맡겼다</h2>
+          <p>
+            EOA는 개인키 서명 하나가 맞으면 요청을 승인한다. 단순하고 널리 쓰이지만 휴대전화의 금융 앱처럼 비밀번호를
+            재설정하는 기능은 기본으로 없다. 개인키나 복구 문구를 잃으면 계정에 접근하기 어렵고, 누군가 훔치면 그 사람이
+            주인처럼 행동할 수 있다. 하루 송금 한도나 보호자 승인 같은 규칙도 계정에 바로 추가할 수 없다.
+          </p>
+          <p>
+            처음 쓰는 사람은 가스비용 ETH부터 구해야 한다는 문제도 있다. 앱에서 토큰을 받았더라도 ETH가 없으면 그 토큰을
+            전송하거나 스마트 컨트랙트에 맡기는 작업을 실행하기 어렵다. 토큰 사용 승인과 실제 교환을 차례로 해야 한다면
+            여러 번 서명하고 여러 번 기다려야 할 수도 있다.
+          </p>
+          <p>
+            <strong>스마트 컨트랙트 계정</strong>은 승인 규칙 자체를 프로그램으로 만든 지갑이다. 여러 사람의 동의,
+            다른 기기를 이용한 복구, 사용 한도 같은 기능을 넣을 수 있다. ERC-4337은 이런 계정이 별도의 EOA에 기대지 않고
+            사용자의 주 계정으로 작동하도록 요청 전달과 가스비 정산의 공통 경로를 만든다. 이를 흔히
+            <strong>계정 추상화</strong>라고 부른다.
+          </p>
+
+          <h2 id="story">처음 온 사용자의 한 번의 교환 — ETH가 없어도 시작하게 만들기</h2>
+          <p>
+            지민이 이더리움 기반 게임에 처음 가입했다고 가정하자. 게임은 지민의 주소에 아이템 토큰을 주었지만 지민에게는
+            가스비를 낼 ETH가 없다. 기존 EOA만 사용한다면 먼저 거래소 등에서 ETH를 구해 지갑으로 보내야 한다. 게임을
+            체험하기도 전에 낯선 준비 과정부터 거치는 셈이다.
+          </p>
+          <p>
+            ERC-4337을 지원하는 게임은 다르게 설계할 수 있다. 지민의 지갑은 “아이템 토큰을 게임에 등록해 줘”라는 요청서에
+            서명한다. 게임의 <strong>페이마스터(Paymaster)</strong>는 첫 이용이라는 조건을 확인하고 가스비를 대신 내기로 한다.
+            <strong>번들러(Bundler)</strong>는 이 요청을 이더리움에 전달하고, 공용 검사 창구인
+            <strong>EntryPoint</strong>가 서명과 비용 조건을 확인한 뒤 스마트 계정이 작업을 실행한다.
+          </p>
+          <div class="code-block" aria-label="ETH가 없는 신규 사용자의 ERC-4337 이용 예시">
+            <div class="code-title"><span>FIRST USE</span><span>NO ETH IN USER WALLET</span></div>
+            <pre><code>지민: 게임 작업 요청에 서명
+  ↓
+페이마스터: 첫 이용 조건을 확인하고 가스비 후원
+  ↓
+번들러: 요청을 이더리움 트랜잭션으로 제출
+  ↓
+EntryPoint: 서명·비용을 검사한 뒤 스마트 계정 실행
+  ↓
+게임: 아이템 등록 완료</code></pre>
+          </div>
+          <p>
+            여기서 <strong>가스비가 사라진 것은 아니다.</strong> 네트워크에 제출되는 마지막 트랜잭션의 가스비는 여전히
+            ETH로 지불된다. 다만 사용자가 직접 내는 대신 페이마스터가 먼저 부담했거나, 서비스가 나중에 다른 방식으로
+            정산한 것이다. 모든 앱이 반드시 가스비를 대신 내야 하는 것도 아니다. 후원 조건은 각 서비스가 정한다.
+          </p>
+
+          <h2 id="flow">어떻게 동작하나 — 요청은 따로 모으고 결과는 일반 트랜잭션으로 기록한다</h2>
+          <p>
+            사용자가 처음 만드는 것은 일반 트랜잭션이 아니라 <code>UserOperation</code>, 줄여서 UserOp이라고 부르는
+            구조화된 요청서다. “어느 계정이 어떤 함수를 실행할지”, “누가 승인했는지”, “가스비를 누가 낼지” 같은 정보가
+            들어간다. 같은 요청을 두 번 실행하지 못하게 붙이는 순번을 <strong>논스(nonce)</strong>, 실행할 구체적인 내용을
+            <strong>호출 데이터</strong>라고 한다.
+          </p>
+          <p>
+            UserOp은 곧바로 이더리움 블록에 들어가지 않는다. 먼저 UserOp을 위한 별도 대기 공간에 전달된다. 번들러가
+            여러 요청을 모아 하나의 일반 이더리움 트랜잭션으로 만들고, EntryPoint의 <code>handleOps</code> 함수를 호출한다.
+            최종적으로는 익숙한 이더리움 트랜잭션 하나가 블록에 기록되는 구조다.
+          </p>
+          <div class="code-block" aria-label="ERC-4337 UserOperation 실행 흐름">
+            <div class="code-title"><span>USEROP FLOW</span><span>OFF-CHAIN → ON-CHAIN</span></div>
+            <pre><code>사용자 지갑
+  └─ UserOperation 요청서 작성·서명
+        ↓  UserOperation 전용 대기 공간
+번들러
+  ├─ 요청이 실행 가능한지 미리 시험
+  └─ 여러 요청을 하나의 일반 트랜잭션으로 묶어 제출
+        ↓  EntryPoint.handleOps(...)
+EntryPoint · 공용 검사 및 정산 창구
+  ├─ 서명과 순번 확인
+  ├─ 계정 또는 페이마스터의 가스비 확인
+  ├─ 필요하면 Factory를 통해 스마트 계정 생성
+  └─ 검사를 통과한 요청 실행·비용 정산
+        ↓
+대상 컨트랙트의 상태 변경</code></pre>
+          </div>
+          <p>
+            핵심은 <strong>검사와 실행을 나누는 것</strong>이다. 번들러는 요청을 받자마자 제출하지 않고 실행 가능성과 비용
+            지불 여부를 먼저 시험한다. EntryPoint도 계정의 <code>validateUserOp</code> 함수를 호출해 서명·유효 시간·필요
+            자금을 확인한 뒤 실행한다. 아무나 실패할 요청을 대량으로 보내 다른 사람에게 비용을 떠넘기는 일을 줄이기 위한
+            장치다.
+          </p>
+          <p>
+            마지막에는 번들러가 보낸 <strong>일반 이더리움 트랜잭션</strong>이 블록에 포함된다. 이더리움의 가장 아래쪽
+            네트워크 규칙은 새로운 형식을 배울 필요가 없다. ERC-4337이 이더리움 자체를 크게 고치지 않고도 적용될 수 있었던
+            이유다.
+          </p>
+
+          <h2 id="roles">누가 무엇을 맡나 — 요청서가 통과하는 사람과 창구</h2>
+          <p>
+            처음에는 이름이 많아 보이지만 택배에 비유하면 쉽다. 사용자는 요청서를 쓰고, 번들러는 여러 요청을 모아 배달하며,
+            EntryPoint는 공동 접수 창구에서 내용과 비용을 확인한다. 스마트 계정은 최종적으로 “이 요청을 정말 실행해도 되는가”를
+            자신의 규칙으로 판단한다. 페이마스터는 선택적으로 배송비를 대신 내는 후원자다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="ERC-4337 구성 요소의 역할" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>구성 요소</th><th>쉬운 비유</th><th>실제로 맡는 일</th></tr></thead>
+              <tbody>
+                <tr><td><code>Account</code><br />스마트 계정</td><td>내 규칙이 적힌 금고</td><td>서명과 권한을 확인하고 통과한 작업을 실행한다. 복구 키·사용 한도 같은 규칙을 넣을 수 있다.</td></tr>
+                <tr><td><code>Bundler</code><br />번들러</td><td>여러 요청을 모으는 배송 기사</td><td>UserOp을 미리 시험하고 여러 건을 하나의 트랜잭션으로 묶어 제출한다. 가스비를 먼저 내고 정산받는다.</td></tr>
+                <tr><td><code>EntryPoint</code></td><td>모두가 사용하는 공동 접수 창구</td><td>계정 생성, 요청 검사, 실행, 가스비 정산을 정해진 순서로 연결한다.</td></tr>
+                <tr><td><code>Paymaster</code><br />페이마스터</td><td>배송비 후원자</td><td>선택한 조건에 맞는 요청의 가스비를 계정 대신 부담한다. 미리 ETH를 맡겨 두어야 한다.</td></tr>
+                <tr><td><code>Factory</code><br />팩토리</td><td>계정 제작소</td><td>아직 만들어지지 않은 스마트 계정을 첫 요청과 함께 배포할 수 있다.</td></tr>
+                <tr><td><code>Aggregator</code><br />애그리게이터</td><td>서명 묶음 검사대</td><td>선택적으로 여러 요청의 서명 검증을 묶어 처리한다. 모든 지갑이 사용하는 필수 요소는 아니다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>승인과 실행을 한 번의 사용자 행동으로</h3>
+          <p>
+            토큰을 교환하려면 먼저 “이 교환소가 내 토큰을 정해진 수량만큼 사용해도 된다”는 승인을 보내고, 그다음 실제
+            교환을 요청하는 경우가 많다. 스마트 계정은 여러 호출을 한 묶음으로 실행하도록 만들 수 있어 사용자의 서명 횟수를
+            줄이고, 둘 중 하나가 실패하면 전체를 되돌리게 설계할 수도 있다. 단, <strong>묶음 실행은 스마트 계정이 직접
+            제공해야 하며 ERC-4337을 쓴다고 자동으로 생기지는 않는다.</strong>
+          </p>
+          <h3>서비스가 첫 가스비를 지원하기</h3>
+          <p>
+            페이마스터는 회원 가입이나 첫 거래처럼 서비스가 정한 조건에서 비용을 후원할 수 있다. 사용자에게 USDC 같은
+            토큰을 받고 대신 ETH를 내는 방식도 만들 수 있다. 그러나 이더리움 네트워크에 지불되는 최종 가스비는 여전히
+            ETH다. 페이마스터가 ETH를 먼저 내고 사용자와 별도로 정산한다고 이해하면 정확하다.
+          </p>
+
+          <h2 id="mainnet">실제로 어디에 쓰이나 — 메인넷 EntryPoint에서 흐름을 확인했다</h2>
+          <p>
+            <strong>메인넷</strong>은 실제 가치가 오가는 이더리움의 본 네트워크다. ERC 문서는 지켜야 할 규칙을 정하고,
+            <code>eth-infinitism/account-abstraction</code> 프로젝트는 개발자가 참고할 수 있는 코드와 버전별 EntryPoint를
+            메인넷에 배포한다. 컨트랙트 주소는 블록체인에서 프로그램을 찾는 고유한 위치다.
+          </p>
+          <p>
+            <strong>Etherscan</strong>은 이더리움의 주소·거래·검증된 소스 코드를 찾아보는 블록 탐색기다. 아래 표에서는
+            공식 릴리스가 밝힌 주소, Etherscan에 배포된 코드, 실제 <code>handleOps</code> 호출 기록을 차례로 맞춰 보았다.
+            버전마다 주소가 다르므로 ERC 번호만 보고 검색된 아무 주소나 사용해서는 안 된다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="메인넷 EntryPoint 확인 결과" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>확인 항목</th><th>확인 결과</th></tr></thead>
+              <tbody>
+                <tr><td>참조 구현 릴리스</td><td>공식 v0.7.0 릴리스가 <code>0x0000000071727De22E5E9d8BAf0edAc6f37da032</code>를 EntryPoint v0.7 주소로 명시한다.</td></tr>
+                <tr><td>이더리움 메인넷</td><td>Etherscan에서 같은 주소가 검증된 <code>Entry Point 0.7.0</code> 컨트랙트로 표시된다.</td></tr>
+                <tr><td>실제 실행</td><td>예시 트랜잭션 <code>0x2ace…3261</code>은 번들러가 이 주소의 <code>handleOps</code>를 호출한 메인넷 기록이다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            이 기록은 UserOp이 중계 서버에서 끝나는 것이 아니라 번들러의 트랜잭션과
+            <code>EntryPoint.handleOps</code> 호출을 거쳐 실제 메인넷 기록으로 이어졌음을 보여 준다. 다만 v0.7은 여러
+            버전 중 하나의 실제 사례다. 지갑, 번들러, 페이마스터가 <strong>같은 버전과 주소</strong>를 사용하는지 먼저
+            확인해야 한다.
+          </p>
+
+          <h2 id="limits">무엇을 해결하지 않나 — 편한 지갑에도 새로운 신뢰 경계가 생긴다</h2>
+          <ul class="article-checklist">
+            <li><span><strong>복구 기능이 저절로 생기지는 않는다.</strong> 가족·보호자나 다른 기기를 이용한 복구 규칙을 스마트 계정 코드에 안전하게 구현해야 한다.</span></li>
+            <li><span><strong>가스비가 사라지지 않는다.</strong> 번들러가 ETH를 먼저 내고 계정이나 페이마스터에서 돌려받는다. 최종 비용을 누가 부담하는지만 달라진다.</span></li>
+            <li><span><strong>여러 작업을 묶었다고 항상 함께 성공하는 것은 아니다.</strong> 하나가 실패했을 때 모두 되돌릴지 계속 진행할지는 스마트 계정 코드가 정한다.</span></li>
+            <li><span><strong>EntryPoint 주소를 정확히 확인해야 한다.</strong> 많은 지갑이 함께 사용하는 창구이므로 공식 버전, 배포 코드, 보안 감사 자료를 확인해야 한다.</span></li>
+            <li><span><strong>번들러와 페이마스터도 멈출 수 있다.</strong> 특정 업체의 서버가 고장 나거나 요청을 거절할 때 다른 업체나 직접 실행 경로로 바꿀 수 있는지 살펴야 한다.</span></li>
+            <li><span><strong>계정 코드를 바꿀 권한도 위험이 될 수 있다.</strong> 누가 지갑 프로그램을 업그레이드할 수 있는지, 변경 전 대기 시간이 있는지 확인해야 한다.</span></li>
+          </ul>
+          <p>
+            특히 페이마스터는 사용자를 대신해 비용을 내므로 공격자가 무료 요청을 반복해 맡겨 둔 ETH를 소진시키려 할 수 있다.
+            검사를 너무 느슨하게 하면 돈을 잃고, 너무 엄격하게 하면 정상 사용자까지 막힌다. 누구의 요청을 어떤 조건으로
+            후원할지는 ERC-4337이 아니라 각 서비스가 정하는 정책이다.
+          </p>
+
+          <h2 id="takeaways">마지막으로 기억할 것 — 가스리스보다 비용의 실제 흐름을 본다</h2>
+          <p>
+            ERC-4337을 한 문장으로 줄이면 <strong>지갑의 승인과 비용 지불 규칙을 프로그램으로 만들기 위한 공통 실행
+            경로</strong>다. “가스리스”라는 광고 문구만 보기보다 사용자의 서명을 누가 검사하고, 누가 ETH를 먼저 내며,
+            중계 서비스가 멈췄을 때 자산을 옮길 다른 길이 있는지 확인해야 한다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="ERC-4337 도입 점검표" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>설계 영역</th><th>먼저 답할 질문</th></tr></thead>
+              <tbody>
+                <tr><td>승인</td><td>기본 키와 복구 키는 각각 무엇을 할 수 있고, 잃어버렸을 때 어떻게 막는가?</td></tr>
+                <tr><td>중복 실행 방지</td><td>논스·네트워크 식별 번호인 체인 ID·EntryPoint 주소를 서명에 넣어 같은 요청을 다른 곳에서 다시 쓰지 못하게 했는가?</td></tr>
+                <tr><td>비용</td><td>사용자·계정·페이마스터 중 누가 가스비를 부담하고, 후원이 거절되면 어떻게 되는가?</td></tr>
+                <tr><td>서비스 중단</td><td>번들러나 페이마스터 하나가 멈춰도 사용자가 자산을 옮길 수 있는가?</td></tr>
+                <tr><td>공식 배포</td><td>사용 중인 EntryPoint의 버전과 주소가 공식 자료와 일치하는가?</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            ERC-4337이 개인키를 마법처럼 없애 주는 것은 아니다. 개인키 하나에 고정돼 있던 승인 방식과 사용자가 직접 내던
+            가스비 방식을 스마트 계정과 서비스가 선택할 수 있게 옮긴 것이다. 편리해진 만큼 계정 프로그램, 번들러,
+            페이마스터까지 함께 안전하게 설계해야 한다.
+          </p>
+
+          <h2 id="sources">출처와 확인 범위</h2>
+          <p>
+            아래 자료를 2026년 11월 24일 확인했다. 표준의 구조와 보안 요구는 공식 ERC 문서를, 구현과 주소는 공식 참조 구현 저장소의 릴리스를 기준으로 삼았다. 메인넷 사례는 동일 주소의 Etherscan 컨트랙트 및 트랜잭션 화면과 대조했다. 주소는 버전별로 달라질 수 있으므로 실제 통합 시 공식 릴리스와 배포된 코드가 일치하는지 다시 확인해야 한다.
+          </p>
+          <ul>
+            <li><a href="https://eips.ethereum.org/EIPS/eip-4337" target="_blank" rel="noreferrer">Ethereum Improvement Proposals — ERC-4337: Account Abstraction Using Alt Mempool</a></li>
+            <li><a href="https://docs.erc4337.io/smart-accounts/entrypoint-explainer.html" target="_blank" rel="noreferrer">ERC-4337 Documentation — The EntryPoint Contract</a></li>
+            <li><a href="https://github.com/eth-infinitism/account-abstraction" target="_blank" rel="noreferrer">eth-infinitism — account-abstraction reference implementation</a></li>
+            <li><a href="https://github.com/eth-infinitism/account-abstraction/releases/tag/v0.7.0" target="_blank" rel="noreferrer">eth-infinitism — ERC-4337 v0.7.0 release and EntryPoint address</a></li>
+            <li><a href="https://etherscan.io/address/0x0000000071727de22e5e9d8baf0edac6f37da032" target="_blank" rel="noreferrer">Etherscan — Entry Point 0.7.0 on Ethereum mainnet</a></li>
+            <li><a href="https://etherscan.io/tx/0x2ace6c19317f25946cbb4f64f2a9f55ec6a695ac8242b2ccccf9762626483261" target="_blank" rel="noreferrer">Etherscan — example handleOps transaction</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>EIP STUDY 05/05 COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
