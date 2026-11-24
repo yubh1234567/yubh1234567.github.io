@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="블로그 구축과 보안 기술 정리, EVSE CTF 문제 제작과 블랙박스 CLI 검증 경험을 돌아보고 부족한 부분을 채울 학습 계획을 정리했다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>보안 공부, 지금 어디까지 왔을까 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell" aria-labelledby="article-title">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-24">2026.11.24</time></p>
+          <h1 id="article-title">보안 공부,<br /><em>지금 어디까지 왔을까</em></h1>
+          <p class="article-lede">
+            블로그에 쌓인 글을 다시 읽어 봤다. 어떤 주제에 관심을 가졌는지는 보였지만, 지금 혼자서 무엇을 할 수 있는지에는 쉽게 답하기 어려웠다.
+            지금까지 남긴 기록과 앞으로 더 연습할 일을 정리해 보려고 한다.
+          </p>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#start"><span>01</span>기록을 시작한 뒤</a></li>
+            <li><a href="#activities"><span>02</span>여섯 분야로 돌아본 활동</a></li>
+            <li><a href="#learned"><span>03</span>공부하며 달라진 질문</a></li>
+            <li><a href="#gaps"><span>04</span>아직 부족한 부분</a></li>
+            <li><a href="#plan"><span>05</span>다음 2주에 해볼 일</a></li>
+            <li><a href="#next"><span>06</span>다음 회고에 남기고 싶은 것</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <h2 id="start">블로그를 만들고, 공부한 것을 남기기 시작했다</h2>
+          <p>
+            나이츠 프런티어에 지원할 때 나는 보안의 기초 지식은 조금 있지만, CTF 문제를 혼자 풀기에는 어려움이 있는 입문자였다.
+            관심 있는 분야는 있어도 그 분야를 공부하려면 무엇부터 해야 할지 막막했다. 지금도 혼자 문제를 해결하는 연습은 더 필요하다.
+            이번에는 그동안 무엇을 했고 어디에서 더 공부해야 하는지 글로 남겨 보려고 한다.
+          </p>
+          <p>
+            10월 말에는 GitHub Pages로 개인 기술 블로그를 만들었다. 차량 보안과 AI 기술 활용을 중심에 두고, 공부한 내용을 여섯 카테고리로 나눠
+            쌓을 공간을 마련했다. 첫 구축 과정을 글로 적은 뒤에는 보안 용어와 사고 사례, 논문과 발표를 하나씩 정리했다.
+          </p>
+          <p>
+            처음에는 기록할 공간을 만드는 일이 먼저였다. 이제는 그 공간에 쓴 내용을 내가 어느 정도 이해하고 있는지 돌아볼 차례라고 생각한다.
+            글을 읽으면 익숙한 내용도 자료를 덮고 설명하려면 다시 찾아보게 되는 부분이 있다. 이번 회고에서는 그 부분도 함께 적어 두려고 한다.
+          </p>
+
+          <h2 id="activities">지금까지의 활동을 여섯 분야로 나눠 보니</h2>
+          <p>
+            현재 블로그의 글과 준비 중인 항목을 기준으로 활동을 분류했다. 분야마다 기록의 양과 진행 정도가 다르다.
+            특히 개념을 조사한 활동과 직접 문제를 해결하거나 성과를 낸 활동은 구분해서 봐야 한다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="여섯 카테고리별 활동과 현재 진행 정도" tabindex="0">
+            <table class="article-table">
+              <thead>
+                <tr><th>카테고리</th><th>활동과 기록</th><th>현재 진행 정도</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>개발</td>
+                  <td><a href="github-pages-start.html">GitHub Pages 개인 기술 블로그 구축</a></td>
+                  <td>블로그를 만들고 구축 과정을 정리했다.</td>
+                </tr>
+                <tr>
+                  <td>CTF / Wargame</td>
+                  <td>AUTOHACK2026 STAFF 활동 · EVSE CTF 문제 제작과 블랙박스 CLI 검증</td>
+                  <td>문제 제작과 검증을 진행했다. 출제 과정과 검증 결과를 별도 글로 정리할 예정이다.</td>
+                </tr>
+                <tr>
+                  <td>Bug Bounty</td>
+                  <td><a href="fuzzer-and-fuzzing.html">퍼징의 원리와 퍼저 종류 조사</a></td>
+                  <td>취약점 탐색 방법을 공부한 단계다. 이 글에서 실제 제보 성과를 다룬 것은 아니다.</td>
+                </tr>
+                <tr>
+                  <td>블로그 / 기술문서</td>
+                  <td>IDS·IPS, 암호 체계 실패, 차량 관련 보안 사고와 이더리움 표준 정리</td>
+                  <td>기초 개념과 사례를 설명하는 글을 쌓았다.</td>
+                </tr>
+                <tr>
+                  <td>논문 / 컨퍼런스</td>
+                  <td><a href="harness-aaos.html">Harness 논문 리뷰</a>, <a href="defcon-34-hacking-ai.html">DEF CON 34 〈Hacking AI〉 발표 리뷰</a></td>
+                  <td>자료를 읽고 차량 보안과 연결해 질문을 정리했다.</td>
+                </tr>
+                <tr>
+                  <td>공모전 / 자격증</td>
+                  <td>블로그에 공개한 활동 기록은 아직 없다.</td>
+                  <td>앞으로 실제 준비하거나 참여한 과정부터 남길 예정이다.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            이렇게 모아 보니 블로그에는 자료를 읽고 설명하는 글이 많이 쌓여 있었다. EVSE에서 CTF 문제를 제작하고 검증한 경험도 있었지만,
+            그 과정은 아직 충분히 글로 남기지 못했다. 공부한 내용과 직접 해본 일을 함께 기록하면서 다음에 보충할 부분을 찾아보려고 한다.
+          </p>
+
+          <h2 id="learned">활동을 하며 질문이 조금 구체적으로 바뀌었다</h2>
+
+          <h3>EVSE에서 CTF 문제를 제작하고 CLI로 검증하기</h3>
+          <p>
+            AUTOHACK2026 STAFF 활동에서는 EVSE의 CTF 문제 제작을 맡았다. 제작한 문제는 CLI를 활용해 블랙박스 환경에서 검증했다.
+            출제자의 입장에서 문제를 만들고, 검증 환경에서 풀이가 어떻게 진행되는지 살펴보는 경험이었다.
+          </p>
+          <p>
+            이 활동을 회고할 때는 출제 의도와 검증 조건부터 정리하려고 한다. CLI에 어떤 자료를 제공했고 어느 범위까지 접근할 수 있게 했는지,
+            풀이가 어느 단계까지 진행됐는지를 함께 남겨야 검증 결과를 설명할 수 있다.
+            풀이가 막힌 지점에서는 문제의 결함, 실행 환경, 제공 정보의 부족을 어떻게 구분했는지도 돌아보고 싶다.
+          </p>
+          <p>
+            별도의 출제 회고에는 내가 맡은 제작 범위와 실제 검증 과정, 그 결과로 수정한 부분을 중심으로 적을 예정이다.
+            CLI를 활용한 검증을 통해 무엇을 확인했고 어떤 부분은 더 확인해야 하는지까지 정리해 두려고 한다.
+          </p>
+
+          <h3>용어의 뜻을 넘어, 어떻게 쓰이는지 묻기</h3>
+          <p>
+            <a href="ids-ips-guide.html">IDS와 IPS</a>, <a href="owasp-cryptographic-failures.html">암호 체계 실패</a>,
+            <a href="fuzzer-and-fuzzing.html">퍼징</a>을 정리하면서 이름과 정의만으로 설명을 끝내기 어렵다는 것을 느꼈다.
+            어떤 상황에서 필요한지, 무엇을 확인하는지, 어디까지 믿을 수 있는지까지 생각해야 글을 이어 쓸 수 있었다.
+          </p>
+          <p>
+            이더리움 표준을 다룰 때도 비슷했다. 표준 번호부터 설명하기보다 지갑, 서명, 사용 허가 같은 말을 먼저 풀어야 다음 내용으로 넘어갈 수 있었다.
+            누군가에게 설명하려고 순서를 정하다 보면, 내가 대충 알고 지나갔던 말이 드러났다.
+            앞으로 다른 주제를 공부할 때도 필요한 기초부터 되짚어 보려고 한다.
+          </p>
+
+          <h3>차량 보안 자료에서 내가 확인할 질문 찾기</h3>
+          <p>
+            DoFun과 Intoxalock, 쏘카 관련 보안 사고를 정리했고, Harness 논문과 〈Hacking AI〉 발표도 살펴봤다.
+            서로 다른 자료를 읽었지만 계속 돌아온 질문은 비슷했다. 어떤 구성 요소를 믿고 있는지, 그 믿음이 깨지면 어디까지 영향을 받는지,
+            글에 적힌 결론을 어떤 근거로 확인할 수 있는지가 궁금했다.
+          </p>
+          <p>
+            Harness에서는 보호 범위와 전제 조건을, 발표 리뷰에서는 시험의 통과 조건을 중심으로 생각해 봤다.
+            아직 해당 시스템을 직접 재현하거나 차량에서 시험한 단계는 아니다. 지금까지는 자료를 바탕으로 질문을 만들어 본 경험이고,
+            앞으로는 그중 작은 질문 하나라도 직접 확인해 보고 싶다.
+          </p>
+
+          <h2 id="gaps">지금 가장 부족한 세 가지</h2>
+
+          <h3>기초 개념을 연결해서 설명하는 연습</h3>
+          <p>
+            여러 주제를 접하면서 익숙해진 단어는 늘었다. 하지만 요청과 응답이 오가는 과정이나 인증과 세션의 관계를 처음부터 설명하려면
+            다시 확인해야 하는 부분이 있다. 새로운 자료에서 모르는 말이 나왔을 때 그 뜻만 찾아보고 넘어가면, 다음 자료에서도 비슷한 곳에서 막힐 수 있다.
+          </p>
+          <p>
+            네트워크, 운영체제, 프로그래밍의 기초를 실습과 함께 보충하려고 한다. 우선 웹 문제 하나에서 실제로 주고받는 요청과 응답을 보고,
+            쿠키와 세션이 어느 부분에 나타나는지 내 말로 적는 것부터 시작하겠다.
+          </p>
+
+          <h3>새 문제를 혼자 시작하고 끝까지 따라가는 경험</h3>
+          <p>
+            지금도 CTF 문제를 혼자 해결하는 데는 어려움이 있다. 자료에 나온 설명을 따라가는 것과 새로운 문제에서 확인할 대상을 정하는 일 사이에
+            간격이 있다. 무엇을 모르는지 정리하고, 가설 하나를 세운 뒤 결과를 보고 다음 시도를 고르는 연습이 더 필요하다.
+          </p>
+          <p>
+            입문 문제를 풀 때는 먼저 일정 시간을 정해 혼자 시도하고, 확인한 사실과 실패한 접근을 적어 두겠다.
+            힌트나 AI의 도움을 받았다면 어느 부분에서 무엇을 도움받았는지도 남기려고 한다.
+            이후에는 설명을 덮고 처음부터 다시 해 보면서 같은 결과를 낼 수 있는지 확인하겠다.
+          </p>
+
+          <h3>글로 정리한 내용을 직접 확인한 기록</h3>
+          <p>
+            현재 글에는 개념과 사례를 설명하는 내용이 많다. EVSE 문제 제작과 블랙박스 검증처럼 직접 진행한 활동도 실행 환경과 관찰 결과를
+            충분히 정리해 두어야 나중에 다시 확인할 수 있다. 검증 당시 어떤 조건에서 무엇을 확인했는지 보여 주는 기록을 더 채워야 한다.
+          </p>
+          <p>
+            AI를 활용할 때도 같은 기준을 적용하려고 한다. 설명을 받았다면 공식 자료와 실행 결과를 확인하고, 내가 이해한 범위까지만 적겠다.
+            아직 실행하지 못한 내용은 다음에 확인할 항목으로 남겨 두려고 한다.
+          </p>
+
+          <h2 id="plan">다음 2주에는 문제 하나를 끝까지 기록해 보려고 한다</h2>
+          <p>
+            당장 모든 분야를 고르게 채우기에는 기초와 실습 시간이 더 필요하다. 다음 2주는 입문 웹 문제 하나를 골라
+            필요한 개념을 공부하고, 다시 풀고, 풀이 글을 완성하는 데 쓰려고 한다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="다음 2주의 학습 계획과 확인할 결과물" tabindex="0">
+            <table class="article-table">
+              <thead>
+                <tr><th>기간</th><th>할 일</th><th>남길 결과물</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1~3일차</td>
+                  <td>입문 웹 문제를 고르고 요청·응답, 쿠키·세션 등 필요한 개념을 정리한다.</td>
+                  <td>직접 확인한 요청·응답과 기초 개념 메모.</td>
+                </tr>
+                <tr>
+                  <td>4~7일차</td>
+                  <td>먼저 혼자 시도하고, 막히면 필요한 힌트를 참고하며 풀이를 진행한다.</td>
+                  <td>가설, 시도, 결과, 도움받은 부분을 적은 풀이 노트.</td>
+                </tr>
+                <tr>
+                  <td>8~11일차</td>
+                  <td>설명을 보지 않고 다시 풀어 보고, 이해가 부족한 단계는 따로 확인한다.</td>
+                  <td>재풀이 결과와 처음에 설명하지 못했던 부분의 보충 기록.</td>
+                </tr>
+                <tr>
+                  <td>12~14일차</td>
+                  <td>환경과 실패한 시도, 해결 근거를 포함해 풀이 글을 완성하고 기존 기술 글도 한 편 다시 점검한다.</td>
+                  <td>첫 CTF / Wargame 풀이 글 1편과 기존 글 수정 기록.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            문제가 예상보다 어렵다면 확인한 범위와 막힌 이유부터 남기겠다. 다음 시도에 필요한 개념이나 조건까지 적어 두면
+            다시 시작할 때 같은 곳에서 헤매는 시간을 줄일 수 있을 것 같다. 풀이를 마쳤더라도 도움 없이 설명하기 어려운 단계는 더 연습할 항목으로 남기겠다.
+          </p>
+
+          <h2 id="next">다음 회고에는 직접 확인한 결과를 남기고 싶다</h2>
+          <p>
+            블로그를 만든 뒤로 공부한 것을 남길 공간이 생겼고, 여러 자료를 읽으며 관심 있는 질문도 조금씩 구체화됐다.
+            이번에 글을 모아 보니 기초 개념을 연결하는 연습과 혼자 문제를 해결하는 경험을 더 쌓아야 한다는 점도 보였다.
+          </p>
+          <p>
+            다음 회고를 쓸 때는 어떤 문제에서 막혔고 무엇을 확인해 해결했는지 이야기하고 싶다.
+            직접 해낸 부분과 도움받은 부분을 돌아보고, 다시 풀었을 때 달라진 점까지 기록할 수 있으면 좋겠다.
+            우선은 첫 풀이 글 한 편을 끝까지 남기는 것부터 해보려고 한다.
+          </p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>LEARNING RETROSPECTIVE / 2026.11</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
