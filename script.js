@@ -3,7 +3,7 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
-const ARTICLE_REVISION = "20261124-2";
+const ARTICLE_REVISION = "20261124-eip4";
 
 function postHref(post) {
   if (post.draft || !post.url.startsWith("posts/")) return post.url;
@@ -34,8 +34,17 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.24",
-    title: "EIP-1559: 가스비를 경매에서 규칙으로",
-    summary: "이더리움과 ETH, 가스비가 무엇인지부터 시작해 기본요금과 팁이 실제 거래 비용을 어떻게 결정하는지 쉽게 살펴본다.",
+    title: "EIP를 읽기 전에: 이더리움의 기본 언어",
+    summary: "이더리움과 ETH의 차이부터 블록체인, 지갑, 서명, 스마트 컨트랙트, 가스비와 EIP·ERC의 뜻까지 처음부터 알아본다.",
+    tags: ["Ethereum", "Blockchain", "입문"],
+    url: "posts/ethereum-basics-before-eips.html",
+    draft: false,
+  },
+  {
+    category: "docs",
+    date: "2026.11.24",
+    title: "EIP-1559: 가스비를 예측 가능한 규칙으로",
+    summary: "예측하기 어려웠던 수수료 경매를 기본요금·팁·최대 한도로 바꾼 원리와 실제 비용 계산, 소각과 한계를 살펴본다.",
     tags: ["Ethereum", "EIP-1559", "Gas"],
     url: "posts/eip-1559-fee-market.html",
     draft: false,
@@ -43,8 +52,8 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.24",
-    title: "ERC-2612: approve를 서명으로 바꾸다",
-    summary: "토큰과 사용 허가부터 알아보고, 가스비가 드는 approve를 지갑 서명으로 바꾸는 permit과 Uniswap 사례를 살펴본다.",
+    title: "ERC-2612: 토큰 사용 허가를 서명으로 바꾸다",
+    summary: "토큰 사용 허가인 approve의 불편을 지갑 서명으로 줄이는 permit의 흐름과 Uniswap V2의 실제 사용 사례를 살펴본다.",
     tags: ["Ethereum", "ERC-2612", "Permit"],
     url: "posts/eip-2612-permit.html",
     draft: false,
@@ -52,26 +61,8 @@ const posts = [
   {
     category: "docs",
     date: "2026.11.24",
-    title: "ERC-1271: 컨트랙트도 서명자가 되는 방법",
-    summary: "지갑·개인키·전자서명의 뜻부터 알아보고, 여러 사람이 관리하는 Safe 같은 스마트 지갑의 동의를 확인하는 방법을 살펴본다.",
-    tags: ["Ethereum", "ERC-1271", "Smart Account"],
-    url: "posts/erc-1271-contract-signatures.html",
-    draft: false,
-  },
-  {
-    category: "docs",
-    date: "2026.11.24",
-    title: "ERC-4626: 수익형 금고의 공통 언어",
-    summary: "토큰을 맡기고 지분을 받는 디지털 금고는 어떻게 작동할까? asset과 share, 공통 입출금 규칙을 sDAI 사례로 알아본다.",
-    tags: ["Ethereum", "ERC-4626", "DeFi"],
-    url: "posts/erc-4626-tokenized-vaults.html",
-    draft: false,
-  },
-  {
-    category: "docs",
-    date: "2026.11.24",
-    title: "ERC-4337: 지갑을 프로그램으로 바꾸는 계정 추상화",
-    summary: "일반 지갑의 불편함부터 시작해 복구·묶음 실행·가스비 대납이 가능한 스마트 계정의 작동 과정을 쉽게 살펴본다.",
+    title: "ERC-4337: 지갑을 프로그램으로 만드는 계정 추상화",
+    summary: "UserOperation·Bundler·EntryPoint·Paymaster가 복구·묶음 실행·가스비 대납이 가능한 스마트 계정을 만드는 흐름을 살펴본다.",
     tags: ["Ethereum", "ERC-4337", "Account Abstraction"],
     url: "posts/erc-4337-account-abstraction.html",
     draft: false,

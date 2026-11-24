@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EIP를 읽기 전에 필요한 이더리움, ETH, 블록체인, 지갑, 서명, 스마트 컨트랙트, 가스비와 토큰의 뜻을 처음부터 설명합니다." />
+    <meta name="theme-color" content="#050a12" />
+    <title>EIP를 읽기 전에: 이더리움의 기본 언어 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-24">2026.11.24</time> · EIP STUDY 00/03</p>
+          <h1>EIP를 읽기 전에<br /><em>이더리움의 기본 언어</em></h1>
+          <p class="article-lede">
+            이더리움은 코인일까, 컴퓨터일까? 지갑에는 무엇이 들어 있고 가스비는 누구에게 왜 내는 걸까?
+            EIP 문서에서 반복해서 만나는 단어들을 하나의 ETH 송금 과정에 연결해, 아무것도 모르는 상태에서도
+            다음 세 편을 읽을 수 있도록 정리한다.
+          </p>
+          <aside class="article-summary" aria-labelledby="article-summary-title">
+            <h2 id="article-summary-title">먼저 기억할 세 문장</h2>
+            <ul>
+              <li><strong>이더리움</strong>은 여러 컴퓨터가 같은 기록과 프로그램을 함께 운영하는 네트워크다.</li>
+              <li><strong>ETH</strong>는 그 네트워크의 기본 코인이며, 거래 수수료인 가스비도 ETH로 낸다.</li>
+              <li><strong>지갑</strong>은 코인을 담는 상자가 아니라 내 요청을 증명할 비밀키를 관리하는 도구다.</li>
+            </ul>
+          </aside>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#ethereum"><span>01</span>이더리움과 블록체인</a></li>
+            <li><a href="#eth-token"><span>02</span>ETH와 토큰</a></li>
+            <li><a href="#wallet"><span>03</span>지갑·주소·비밀키</a></li>
+            <li><a href="#transaction"><span>04</span>거래가 기록되는 과정</a></li>
+            <li><a href="#contract"><span>05</span>스마트 컨트랙트와 앱</a></li>
+            <li><a href="#gas"><span>06</span>가스와 가스비</a></li>
+            <li><a href="#network"><span>07</span>메인넷과 테스트넷</a></li>
+            <li><a href="#eip"><span>08</span>EIP와 ERC</a></li>
+            <li><a href="#safety"><span>09</span>처음 사용할 때의 안전수칙</a></li>
+            <li><a href="#roadmap"><span>10</span>다음 세 편 읽는 순서</a></li>
+            <li><a href="#sources"><span>11</span>출처</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>이 글의 목표</strong>
+            <p>
+              코드를 외우는 것이 아니다. “누가 요청하고, 누가 확인하며, 무엇이 기록되고, 왜 ETH가 필요한가”를
+              자기 말로 설명할 수 있으면 충분하다.
+            </p>
+          </div>
+
+          <h2 id="ethereum">이더리움과 블록체인 — 모두가 같은 장부를 보는 컴퓨터</h2>
+          <p>
+            은행 앱에서 송금하면 은행의 중앙 서버가 잔액 장부를 바꾼다. 게임 아이템을 보내면 게임 회사의 서버가
+            소유자 기록을 바꾼다. <strong>이더리움(Ethereum)</strong>에서는 특정 회사의 서버 한 대가 아니라 세계 여러
+            컴퓨터가 같은 규칙에 따라 기록을 확인하고 보관한다. 연결된 컴퓨터와 규칙 전체를
+            <strong>네트워크</strong>라고 부른다.
+          </p>
+          <p>
+            거래 기록은 일정한 묶음인 <strong>블록(block)</strong>에 담긴다. 새 블록은 이전 블록의 디지털 지문을
+            포함해 순서대로 연결된다. 이 연결된 기록 구조가 <strong>블록체인(blockchain)</strong>이다. 과거 블록의
+            내용을 몰래 바꾸면 뒤의 연결과 맞지 않으므로 다른 참여자들이 이상을 발견할 수 있다.
+          </p>
+          <div class="code-block" aria-label="중앙 서버와 이더리움 비교">
+            <div class="code-title"><span>WHO KEEPS THE RECORD?</span><span>CENTRALIZED / SHARED</span></div>
+            <pre><code>은행 송금   → 은행 서버가 장부를 변경
+게임 아이템 → 게임 회사 서버가 장부를 변경
+이더리움   → 여러 참여자가 같은 규칙으로 변경을 확인하고 공유</code></pre>
+          </div>
+          <p>
+            네트워크에 참여해 블록과 거래를 확인하는 소프트웨어를 실행하는 컴퓨터를 <strong>노드(node)</strong>라고 한다.
+            그중 ETH를 맡기고 새로운 블록을 제안하거나 다른 블록이 올바른지 확인하는 참여자를
+            <strong>검증자(validator)</strong>라고 한다. “탈중앙화”는 운영 주체가 전혀 없다는 뜻이 아니라, 한 회사의
+            데이터베이스 하나만 믿지 않고 여러 참여자가 공개된 규칙을 함께 따른다는 뜻에 가깝다.
+          </p>
+
+          <h2 id="eth-token">ETH와 토큰 — 네트워크의 기본 코인과 프로그램이 만든 자산</h2>
+          <p>
+            <strong>ETH(이더)</strong>는 이더리움 네트워크에 기본으로 포함된 코인이다. 사람끼리 보낼 수 있고,
+            이더리움에 계산과 기록을 요청할 때 수수료를 내는 데에도 사용한다. 따라서 “이더리움”은 시스템의 이름이고
+            “ETH”는 그 시스템 안의 기본 자산 이름이다.
+          </p>
+          <p>
+            <strong>토큰(token)</strong>은 스마트 컨트랙트가 만든 별도의 디지털 자산이다. USDC나 DAI 같은 토큰의
+            잔액은 해당 토큰 프로그램의 장부에 기록된다. NFT도 토큰의 한 종류다. 일상에서는 모두 코인이라고 부르기도
+            하지만 기술적으로는 ETH와 컨트랙트가 발행한 토큰을 구분한다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="이더리움 ETH 토큰 구분" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>용어</th><th>쉬운 뜻</th><th>예시</th></tr></thead>
+              <tbody>
+                <tr><td>이더리움</td><td>공동 장부와 프로그램을 운영하는 네트워크</td><td>도로와 교통 규칙</td></tr>
+                <tr><td>ETH</td><td>네트워크에 기본으로 들어 있는 코인</td><td>통행료를 낼 수 있는 기본 화폐</td></tr>
+                <tr><td>토큰</td><td>스마트 컨트랙트가 관리하는 별도 자산</td><td>도로 위 특정 서비스의 상품권</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="wallet">지갑·주소·비밀키 — 돈주머니가 아니라 서명 도구</h2>
+          <p>
+            ETH와 토큰은 휴대전화나 브라우저 지갑 안에 파일처럼 들어 있지 않다. 블록체인 장부에 “이 주소가 얼마를
+            소유한다”라고 기록되어 있다. <strong>지갑(wallet)</strong>은 그 기록을 조회하고, 내가 허락한 요청임을
+            증명하는 키를 관리해 거래를 만드는 프로그램이다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="지갑 관련 핵심 용어" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>용어</th><th>역할</th><th>비유</th></tr></thead>
+              <tbody>
+                <tr><td>주소</td><td>자산을 받거나 계정을 찾을 때 공개하는 식별자</td><td>계좌번호</td></tr>
+                <tr><td>비밀키</td><td>계정을 움직일 수 있는 공개하면 안 되는 비밀 숫자</td><td>절대 복제해 주면 안 되는 도장</td></tr>
+                <tr><td>전자서명</td><td>비밀키를 보여 주지 않고 특정 내용에 동의했음을 증명하는 값</td><td>문서에 찍은 도장 자국</td></tr>
+                <tr><td>시드 문구</td><td>지갑의 키를 다시 만들 수 있는 복구용 단어 목록</td><td>모든 열쇠를 복원하는 원본</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            일반 사용자가 비밀키로 직접 제어하는 계정을 <strong>EOA(Externally Owned Account, 외부 소유 계정)</strong>라고
+            한다. 반대로 프로그램 코드가 규칙을 정하는 주소는 <strong>컨트랙트 계정</strong>이다. 비밀키와 시드 문구를
+            가진 사람은 사실상 자산을 움직일 수 있으므로 누구에게도 보내면 안 된다. 정상적인 고객센터와 이벤트는
+            시드 문구 전체를 요구하지 않는다.
+          </p>
+
+          <h2 id="transaction">거래가 기록되는 과정 — 서명된 요청에서 새로운 블록까지</h2>
+          <p>
+            <strong>트랜잭션(transaction)</strong>은 블록체인의 상태를 바꾸기 위해 보내는 서명된 요청이다. 단순 ETH
+            송금, 토큰 교환, NFT 발행, 스마트 컨트랙트 호출이 모두 트랜잭션이 될 수 있다. 화면에서 버튼을 누르는 행위
+            자체보다, 지갑이 보여 주는 최종 요청을 확인하고 서명하는 순간이 중요하다.
+          </p>
+          <div class="code-block" aria-label="ETH 송금 처리 순서">
+            <div class="code-title"><span>ONE ETH TRANSFER</span><span>REQUEST → RECORD</span></div>
+            <pre><code>1. “친구 주소로 0.01 ETH 전송” 요청을 만든다.
+2. 지갑이 금액·받는 주소·네트워크·수수료를 보여 준다.
+3. 사용자가 확인하면 지갑이 비밀키로 요청에 서명한다.
+4. 노드가 서명, 잔액, 요청 순서를 검사한다.
+5. 검증자가 거래를 블록에 포함한다.
+6. 여러 노드가 같은 결과를 반영하고 친구의 잔액이 바뀐다.</code></pre>
+          </div>
+          <p>
+            거래에는 같은 계정의 요청 순서를 구분하는 <strong>논스(nonce)</strong>가 있다. 쉽게 말해 “이 계정의 몇 번째
+            요청인가”를 나타내는 일회용 순번이다. 표준마다 논스를 저장하는 방식은 조금씩 달라도, 이미 처리한 요청을
+            다시 사용하는 <strong>재전송 공격</strong>을 막는다는 목적은 비슷하다.
+          </p>
+          <p>
+            블록에 기록된 데이터와 실행을 <strong>온체인(on-chain)</strong>, 블록체인 밖의 서버나 기기에서만 처리한 것을
+            <strong>오프체인(off-chain)</strong>이라고 부른다. 오프체인 서명은 즉시 가스비가 들지 않을 수 있지만,
+            그 서명을 이용해 블록체인 상태를 바꾸는 마지막 트랜잭션에는 누군가의 가스비가 필요하다.
+          </p>
+
+          <h2 id="contract">스마트 컨트랙트와 앱 — 조건을 자동 실행하는 공개 프로그램</h2>
+          <p>
+            <strong>스마트 컨트랙트(smart contract)</strong>는 이더리움에 배포되어 여러 노드가 같은 결과를 계산하는
+            프로그램이다. 자판기가 돈과 선택을 확인한 뒤 정해진 상품을 내보내듯, 컨트랙트는 입력과 현재 상태를 확인한 뒤
+            토큰 전송이나 교환 같은 동작을 실행한다. “스마트”라는 이름과 달리 스스로 판단하는 인공지능이나 법률 계약은 아니다.
+          </p>
+          <p>
+            웹 화면과 지갑, 스마트 컨트랙트를 연결한 서비스를 <strong>디앱(dApp, 탈중앙화 애플리케이션)</strong>이라고
+            부른다. 스마트 컨트랙트로 교환·대출·예치 같은 금융 기능을 만드는 분야가
+            <strong>디파이(DeFi, 탈중앙화 금융)</strong>다. 화면을 운영하는 회사가 있더라도 핵심 자산 이동 규칙을
+            공개된 컨트랙트가 실행할 수 있다는 점이 일반 웹 서비스와 다르다.
+          </p>
+          <p>
+            배포된 코드는 보통 같은 주소에서 마음대로 고치기 어렵다. 다만 다른 구현으로 연결하는 업그레이드 구조나 관리자
+            권한을 둔 컨트랙트도 있다. 따라서 “블록체인에 있다”는 사실만으로 안전하거나 완전히 변경 불가능하다고 단정해서는 안 된다.
+          </p>
+
+          <h2 id="gas">가스와 가스비 — 작업량과 실제로 내는 ETH</h2>
+          <p>
+            노드가 서명을 확인하고 코드를 실행하며 결과를 저장하려면 컴퓨터 자원이 든다. 이 작업량을 재는 단위가
+            <strong>가스(gas)</strong>다. 가스는 별도의 코인이 아니다. 실제로 ETH로 지불하는 네트워크 이용료가
+            <strong>가스비(gas fee)</strong>다.
+          </p>
+          <div class="code-block" aria-label="가스비 계산 방식">
+            <div class="code-title"><span>GAS FEE</span><span>AMOUNT × UNIT PRICE</span></div>
+            <pre><code>주유비 = 사용한 연료량 × 리터당 가격
+가스비 = 사용한 gas   × gas 한 단위의 가격
+
+단순 ETH 전송: 21,000 gas 사용
+단위 가격을 22 gwei라고 가정
+21,000 × 22 gwei = 462,000 gwei = 0.000462 ETH</code></pre>
+          </div>
+          <p>
+            <strong>gwei</strong>는 작은 가스 가격을 표시하기 편한 ETH의 단위이며 <code>10억 gwei = 1 ETH</code>다.
+            <strong>가스 한도(gas limit)</strong>는 이 요청에 사용해도 된다고 정한 최대 작업량이다. 한도가 너무 작으면
+            실행 도중 가스가 부족해 실패할 수 있다. 상태를 바꾸지 않고 이미 기록된 값을 조회하는 작업은 보통 사용자가
+            온체인 가스비를 내지 않는다.
+          </p>
+          <p>
+            가스비는 네트워크 자원을 공짜로 무한히 사용하지 못하게 해 스팸 요청을 억제한다. 네트워크가 붐비면 같은 블록
+            공간을 원하는 사람이 많아져 단위 가격이 오를 수 있다. 이 단위 가격을 더 예측하기 쉽게 바꾼 규칙이 다음 글의
+            <strong>EIP-1559</strong>다.
+          </p>
+
+          <h2 id="network">메인넷과 테스트넷 — 실제 자산과 연습용 자산</h2>
+          <p>
+            실제 ETH와 토큰이 오가는 운영 네트워크를 <strong>메인넷(mainnet)</strong>이라고 한다. 개발자가 기능을
+            시험하는 별도 네트워크는 <strong>테스트넷(testnet)</strong>이다. 테스트넷 ETH는 기능 시험용이고 실제 ETH의
+            경제적 가치를 보장하지 않는다. 주소 모양이 같아 보여도 네트워크가 다르면 서로 다른 기록이다.
+          </p>
+          <p>
+            거래와 주소, 컨트랙트 코드를 검색하는 웹 서비스를 <strong>블록 탐색기(block explorer)</strong>라고 한다.
+            Etherscan은 이더리움에서 널리 사용하는 탐색기다. 탐색기는 블록체인 자체가 아니라, 공개 데이터를 읽기 쉽게
+            보여 주는 서비스다. 거래가 성공했는지 확인할 때는 주소뿐 아니라 네트워크, 거래 해시, 블록 번호도 함께 본다.
+          </p>
+
+          <h2 id="eip">EIP와 ERC — 개선 제안과 서로 맞춰 쓰는 규격</h2>
+          <p>
+            <strong>프로토콜(protocol)</strong>은 참여자들이 함께 지키는 통신과 처리 규칙이다. 이더리움의 규칙이나
+            공통 사용법을 새로 제안하고 토론하는 문서가 <strong>EIP(Ethereum Improvement Proposal, 이더리움 개선 제안)</strong>다.
+            제안됐다고 모두 적용되는 것은 아니며 초안, 검토, 최종 상태 등을 거친다.
+          </p>
+          <p>
+            그중 토큰이나 지갑처럼 애플리케이션이 함께 사용할 규격을 주로
+            <strong>ERC(Ethereum Request for Comments)</strong>라고 부른다. EIP는 건물 전체의 제도 개선안, ERC는 여러
+            제조사가 맞춰 쓰는 콘센트 규격에 가깝다. ERC도 공식 EIP 저장소에서 번호를 부여받기 때문에 문서 주소에는
+            <code>eip-2612</code>처럼 표시될 수 있다.
+          </p>
+          <div class="table-scroll" role="region" aria-label="이번 시리즈의 세 표준" tabindex="0">
+            <table class="article-table">
+              <thead><tr><th>문서</th><th>질문</th><th>일상적인 비유</th></tr></thead>
+              <tbody>
+                <tr><td>EIP-1559</td><td>네트워크 이용료를 어떻게 정할까?</td><td>교통량에 맞춰 조정되는 통행료</td></tr>
+                <tr><td>ERC-2612</td><td>앱의 토큰 사용을 서명으로 어떻게 허락할까?</td><td>기간과 금액이 적힌 위임장</td></tr>
+                <tr><td>ERC-4337</td><td>복구와 대납이 가능한 스마트 지갑을 어떻게 실행할까?</td><td>규칙을 설정할 수 있는 비서 계정</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h2 id="safety">처음 사용할 때의 안전수칙 — 서명도 자산을 움직일 수 있다</h2>
+          <ul class="article-checklist">
+            <li><span><strong>시드 문구와 비밀키는 입력하지 않는다.</strong> 지갑 복구 외의 웹사이트, 고객센터, 이벤트가 요구하면 중단한다.</span></li>
+            <li><span><strong>주소 앞뒤만 보지 않는다.</strong> 붙여넣은 전체 주소와 사용하는 네트워크를 다시 확인하고, 큰 금액은 먼저 소액으로 시험한다.</span></li>
+            <li><span><strong>서명 내용을 읽는다.</strong> 단순 로그인인지, 토큰 사용 권한인지, 실제 거래인지 구분하고 금액·대상·기한을 확인한다.</span></li>
+            <li><span><strong>무제한 토큰 허용을 습관적으로 선택하지 않는다.</strong> 필요한 금액만 허용하고 사용하지 않는 권한은 취소한다.</span></li>
+            <li><span><strong>컨트랙트 주소와 공식 경로를 확인한다.</strong> 이름과 화면은 복제할 수 있으므로 공식 문서가 안내한 주소와 비교한다.</span></li>
+            <li><span><strong>가스비와 전송액을 구분한다.</strong> 보내는 자산 외에 가스비로 사용할 ETH가 추가로 필요할 수 있다.</span></li>
+          </ul>
+
+          <h2 id="roadmap">다음 세 편 읽는 순서 — 수수료에서 스마트 계정까지</h2>
+          <p>
+            먼저 <a href="eip-1559-fee-market.html">EIP-1559</a>에서 모든 거래가 만나는 가스비 규칙을 배운다.
+            다음으로 <a href="eip-2612-permit.html">ERC-2612</a>에서 토큰과 앱 사이의 사용 허가를 서명으로 만드는
+            방법을 본다. 마지막 <a href="erc-4337-account-abstraction.html">ERC-4337</a>에서는 지갑 자체를 프로그램으로
+            만들어 복구, 묶음 실행, 가스비 대납 같은 기능을 제공하는 과정을 살펴본다.
+          </p>
+          <div class="code-block" aria-label="EIP 학습 순서">
+            <div class="code-title"><span>READING ORDER</span><span>FOUNDATION → APPLICATION</span></div>
+            <pre><code>이더리움 기본 언어
+    ↓
+EIP-1559  — 거래 수수료는 어떻게 정해지는가
+    ↓
+ERC-2612  — 토큰 사용 권한을 어떻게 서명하는가
+    ↓
+ERC-4337  — 지갑을 어떻게 프로그래밍 가능한 계정으로 만드는가</code></pre>
+          </div>
+          <p>
+            세부 함수 이름을 모두 외울 필요는 없다. 각 문서가 등장하기 전의 불편, 새 규칙이 바꾼 흐름, 누가 비용을
+            지불하고 어떤 위험이 남는지를 설명할 수 있다면 표준의 핵심을 이해한 것이다.
+          </p>
+
+          <h2 id="sources">출처와 확인 범위</h2>
+          <p>
+            아래 자료를 2026년 11월 24일 확인했다. 이 글은 이후 세 표준을 읽기 위한 개념 설명이며 코인 구매나 투자
+            권유가 아니다. 수수료와 네트워크 상태는 계속 변하므로 실제 거래 전에는 지갑에 표시된 값을 다시 확인해야 한다.
+          </p>
+          <ul>
+            <li><a href="https://ethereum.org/what-is-ethereum/" target="_blank" rel="noreferrer">ethereum.org — What is Ethereum?</a></li>
+            <li><a href="https://ethereum.org/developers/docs/intro-to-ethereum/" target="_blank" rel="noreferrer">ethereum.org — Introduction to Ethereum</a></li>
+            <li><a href="https://ethereum.org/developers/docs/accounts/" target="_blank" rel="noreferrer">ethereum.org — Ethereum accounts</a></li>
+            <li><a href="https://ethereum.org/developers/docs/transactions/" target="_blank" rel="noreferrer">ethereum.org — Transactions</a></li>
+            <li><a href="https://ethereum.org/developers/docs/smart-contracts/" target="_blank" rel="noreferrer">ethereum.org — Introduction to smart contracts</a></li>
+            <li><a href="https://ethereum.org/developers/docs/gas/" target="_blank" rel="noreferrer">ethereum.org — Gas and fees</a></li>
+            <li><a href="https://eips.ethereum.org/" target="_blank" rel="noreferrer">Ethereum Improvement Proposals — 공식 EIP 저장소</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong><p>EIP STUDY FOUNDATION COMPLETE</p></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
