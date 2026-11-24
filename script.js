@@ -23,6 +23,15 @@ const categories = [
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
   {
+    category: "research",
+    date: "2026.11.24",
+    title: "AI가 테스트를 통과하면 정말 안전할까",
+    summary: "DEF CON 34 〈Hacking AI〉를 바탕으로, AI가 평가 지표를 충족하는 방식과 차량 소프트웨어 검증에 남는 질문을 살펴본다.",
+    tags: ["DEF CON 34", "AI 보안", "컨퍼런스 리뷰"],
+    url: "posts/defcon-34-hacking-ai.html",
+    draft: false,
+  },
+  {
     category: "docs",
     date: "2026.11.18",
     title: "암호 체계 실패",

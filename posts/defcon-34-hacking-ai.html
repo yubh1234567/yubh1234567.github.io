@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DEF CON 34 브루스 슈나이어의 〈Hacking AI〉 발표를 바탕으로 AI가 지표를 충족하는 방식과 차량 소프트웨어의 검증 기준을 살펴봅니다."
+    />
+    <meta name="theme-color" content="#050a12" />
+    <title>AI가 테스트를 통과하면 정말 안전할까 — byeongPR0</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500;600;700;800;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../post.css?v=20261118-3" />
+    <script src="../post.js" defer></script>
+  </head>
+  <body class="post-page">
+    <a class="skip-link" href="#article">본문 바로가기</a>
+    <div class="reading-progress" id="readingProgress" aria-hidden="true"></div>
+
+    <header class="post-header">
+      <div class="post-header-inner">
+        <a class="brand" href="../index.html" aria-label="byeongPR0 홈">
+          <span class="brand-mark">BPR0</span>
+          <span class="brand-name">byeong<span>PR0</span></span>
+        </a>
+        <a class="post-back" href="../index.html#archive">LOG INDEX ←</a>
+      </div>
+    </header>
+
+    <main id="article">
+      <section class="article-hero section-shell" aria-labelledby="article-title">
+        <div class="article-heading">
+          <p class="article-date"><time datetime="2026-11-24">2026.11.24</time></p>
+          <h1 id="article-title">AI가 테스트를 통과하면<br /><em>정말 안전할까</em></h1>
+          <p class="article-lede">
+            DEF CON 34의 〈Hacking AI〉에서 나온 배출가스 시험 이야기를 출발점으로,
+            차량 소프트웨어를 검증할 때 어떤 질문을 던져야 할지 생각해 봤다.
+          </p>
+        </div>
+      </section>
+
+      <div class="article-layout section-shell">
+        <aside class="article-toc" aria-label="글의 구성">
+          <span>SESSION MAP</span>
+          <ol>
+            <li><a href="#choice"><span>01</span>이 발표를 고른 이유</a></li>
+            <li><a href="#measurement"><span>02</span>센서가 놓친 것</a></li>
+            <li><a href="#vehicle"><span>03</span>시험을 통과한 자동차</a></li>
+            <li><a href="#review"><span>04</span>발견 이후의 일</a></li>
+            <li><a href="#sources"><span>05</span>영상과 자료</a></li>
+          </ol>
+        </aside>
+
+        <article class="article-body">
+          <div class="note-box">
+            <strong>Hacking AI</strong>
+            <p>
+              브루스 슈나이어(Bruce Schneier) · DEF CON 34 기조연설 · 2026년 8월 7일 발표 · 44분 34초
+              <a href="https://www.youtube.com/watch?v=eEBv0STiYhI">공식 영상</a>
+            </p>
+          </div>
+
+          <h2 id="choice">이 발표를 고른 이유</h2>
+          <p>
+            Black Hat의 Briefings와 DEF CON 영상 아카이브를 둘러보다가 〈Hacking AI〉를 골랐다.
+            제목만 보고는 AI의 취약점을 설명하는 발표인 줄 알았다.
+            그런데 슈나이어는 AI를 공격하는 경우, 사람이 AI를 써서 다른 시스템을 공격하는 경우,
+            AI가 주어진 일을 하다가 스스로 규칙의 빈틈을 찾아내는 경우를 구분했다.
+            세 번째 이야기를 차량 소프트웨어에 대입해 보고 싶었다.
+            <a href="https://www.youtube.com/watch?v=eEBv0STiYhI&amp;t=47s">영상 0:47</a>
+          </p>
+
+          <h2 id="measurement">센서가 놓친 것</h2>
+          <p>
+            발표에 나온 로봇 청소기 일화가 기억에 남았다. 물체에 부딪히지 않도록 학습시켰더니 청소기가 뒤로 움직였다고 한다.
+            뒤쪽에는 충돌을 감지할 센서가 없었다. 이 예에서 센서가 기록한 충돌 횟수만 세면 청소기가 일을 잘한 것처럼 보인다.
+            슈나이어가 ‘지니 문제’라고 부른 것도 이와 닮았다. 소원에 적힌 문장은 충실히 따르면서, 사람이 당연하게 여긴 조건은 빠뜨리는 것이다.
+            <a href="https://www.youtube.com/watch?v=eEBv0STiYhI&amp;t=427s">영상 7:07</a> ·
+            <a href="https://www.youtube.com/watch?v=eEBv0STiYhI&amp;t=507s">영상 8:27</a>
+          </p>
+          <p>
+            청소기 이야기를 보며 내가 테스트를 읽는 방식도 돌아봤다. 통과한 항목을 먼저 세면 검사에서 빠진 조건은 눈에 잘 들어오지 않는다.
+            <strong>좋아진 수치가 실제로 어떤 행동을 보여 주는지</strong> 설명할 수 있어야 그 수치를 믿을 수 있겠다는 생각이 들었다.
+          </p>
+
+          <h2 id="vehicle">시험을 통과한 자동차</h2>
+          <p>
+            슈나이어는 2015년 폭스바겐 배출가스 사건을 이어서 소개한다. 미국 환경보호청(EPA)에 따르면
+            일부 디젤 차량은 시험 조건에서 배출가스 저감 장치를 정상 작동시켰고, 평소 주행에서는 그 효과를 낮췄다.
+            당시 소프트웨어는 사람이 의도적으로 설계했다. 발표자는 같은 사례를 가져와, AI에 ‘배출가스 시험을 통과하면서 성능을 높여라’고
+            맡긴다면 비슷한 결과가 나올 수 있다고 가정한다.
+            <a href="https://www.youtube.com/watch?v=eEBv0STiYhI&amp;t=611s">영상 10:11</a> ·
+            <a href="https://www.epa.gov/vw/learn-about-volkswagen-violations">미국 EPA의 사건 정리</a>
+          </p>
+          <p>
+            비슷한 상황을 주차 보조 기능으로 바꿔 봤다. AI에 ‘불필요한 경고를 줄여 달라’고 맡긴 뒤 경고 횟수만 비교하면,
+            센서에 이상이 생겼을 때 필요한 경고까지 사라지는 변경을 놓칠 수 있다.
+            시뮬레이터에서 이 변경을 검토한다면 정상 상황에서의 오경보와 함께,
+            센서 입력이 끊겼을 때 기능이 제한됐다는 사실을 운전자에게 알리는지도 확인하겠다.
+            같은 화면을 보더라도 ‘경고가 몇 번 떴나’와 ‘필요한 순간에 경고가 떴나’는 다른 질문이다.
+          </p>
+
+          <h2 id="review">발견 이후의 일</h2>
+          <p>
+            후반부에서 슈나이어는 AI로 세법 개정안을 미리 검토하는 모습을 그린다. 허점을 찾아내는 일은 빨라져도 그 조항을 바꾸려면
+            여전히 의사결정이 필요하다. 소프트웨어와 법을 나란히 놓으니 문제를 발견한 뒤 실제 수정이 적용되기까지의 시간이 눈에 들어왔다.
+            <a href="https://www.youtube.com/watch?v=eEBv0STiYhI&amp;t=1606s">영상 26:46</a>
+          </p>
+          <p>
+            다만 발표의 소프트웨어 비유는 쉽게 고칠 수 있는 프로그램을 떠올리게 한다. 차량이라면 수정안을 만든 뒤에도
+            서로 다른 차량 구성에서 같은 문제가 해결됐는지, 기존 기능에 문제가 생기지 않았는지 살펴야 한다.
+            그 차이가 발표를 더 재미있게 만들었다. 발견 속도가 빨라졌을 때 어디에서 일이 쌓이는지 살펴보면,
+            무엇을 자동화할지와 함께 어떤 판단을 누가 맡아야 할지도 보인다.
+          </p>
+          <p>
+            다음에 AI가 만든 변경을 검토할 때는 통과 표시 옆에 한 줄을 더 적어 보려 한다.
+            <strong>이 테스트가 통과한 상태에서도 사용자는 어떤 문제를 겪을 수 있을까?</strong>
+          </p>
+
+          <h2 id="sources">영상과 자료</h2>
+          <ul>
+            <li><a href="https://www.youtube.com/watch?v=eEBv0STiYhI">DEF CON 34 공식 발표 영상</a></li>
+            <li><a href="https://media.defcon.org/DEF%20CON%2034/DEF%20CON%2034%20video%20and%20slides/DEF%20CON%2034%20video%20and%20slides%20captions/DEF%20CON%2034%20-%20Hacking%20AI%20-%20Bruce%20Schneier.eng.txt">DEF CON 공식 영문 자막</a></li>
+            <li><a href="https://www.schneier.com/essays/archives/2026/11/ai-doesnt-have-to-go-rogue-to-break-the-world.html">슈나이어가 기조연설을 바탕으로 쓴 글</a></li>
+            <li><a href="https://www.epa.gov/vw/learn-about-volkswagen-violations">미국 EPA의 폭스바겐 배출가스 사건 정리</a></li>
+            <li><a href="https://media.defcon.org/">DEF CON 아카이브</a> · <a href="https://www.blackhat.com/briefings/">Black Hat Briefings</a></li>
+          </ul>
+        </article>
+      </div>
+    </main>
+
+    <footer class="article-footer">
+      <div class="article-footer-inner section-shell">
+        <div><strong>byeong<span>PR0</span></strong></div>
+        <a class="plain-link" href="../index.html#archive">다른 기록 보기 →</a>
+      </div>
+    </footer>
+  </body>
+</html>
