@@ -25,8 +25,8 @@ const posts = [
   {
     category: "research",
     date: "2026.11.24",
-    title: "AI가 테스트를 통과하면 정말 안전할까",
-    summary: "DEF CON 34 〈Hacking AI〉를 바탕으로, AI가 평가 지표를 충족하는 방식과 차량 소프트웨어 검증에 남는 질문을 살펴본다.",
+    title: "AI가 일을 끝냈다는 말을 어디까지 믿을까",
+    summary: "DEF CON 34 〈Hacking AI〉를 보고, AI가 목표를 달성한 과정에서 무엇을 확인해야 하는지와 규칙의 빈틈을 고치는 책임을 생각해 봤다.",
     tags: ["DEF CON 34", "AI 보안", "컨퍼런스 리뷰"],
     url: "posts/defcon-34-hacking-ai.html",
     draft: false,
