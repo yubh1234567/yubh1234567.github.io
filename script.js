@@ -3,7 +3,7 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
-const ARTICLE_REVISION = "20261124-eip4-human1";
+const ARTICLE_REVISION = "20261124-eip4-human1-evse1";
 
 function postHref(post) {
   if (post.draft || !post.url.startsWith("posts/")) return post.url;
@@ -22,6 +22,15 @@ const categories = [
 
 // 새 글을 공개할 때 문서 경로를 url에 넣고 draft를 false로 바꿉니다.
 const posts = [
+  {
+    category: "docs",
+    date: "2026.11.24",
+    title: "보안 공부, 지금 어디까지 왔을까",
+    summary: "블로그와 기술 문서, EVSE CTF 문제 제작과 블랙박스 CLI 검증 경험을 돌아보고 기초와 실습을 채울 다음 2주를 계획했다.",
+    tags: ["회고", "나이츠 프런티어", "학습 계획"],
+    url: "posts/security-learning-retrospective.html",
+    draft: false,
+  },
   {
     category: "research",
     date: "2026.11.24",
