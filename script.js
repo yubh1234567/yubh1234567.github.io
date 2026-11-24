@@ -3,7 +3,7 @@ const PROFILE = {
   githubUrl: "https://github.com/yubh1234567",
 };
 
-const ARTICLE_REVISION = "20261124-eip4";
+const ARTICLE_REVISION = "20261124-eip4-human1";
 
 function postHref(post) {
   if (post.draft || !post.url.startsWith("posts/")) return post.url;
@@ -35,7 +35,7 @@ const posts = [
     category: "docs",
     date: "2026.11.24",
     title: "EIP를 읽기 전에: 이더리움의 기본 언어",
-    summary: "이더리움과 ETH의 차이부터 블록체인, 지갑, 서명, 스마트 컨트랙트, 가스비와 EIP·ERC의 뜻까지 처음부터 알아본다.",
+    summary: "EIP 문서를 처음 열었을 때 이더리움과 ETH의 차이부터 막혔다. 지갑·서명·가스비처럼 자주 만나는 말을 ETH 송금 순서에 맞춰 정리했다.",
     tags: ["Ethereum", "Blockchain", "입문"],
     url: "posts/ethereum-basics-before-eips.html",
     draft: false,
